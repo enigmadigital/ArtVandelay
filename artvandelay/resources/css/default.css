@@ -18,6 +18,11 @@ div.tool > div.section + div.section
 	border-top: 1px solid #EEE;
 }
 
+textarea.code
+{
+	font-family: 'Consolas', monospace;
+}
+
 @media screen and (min-width: 700px)
 {
 	div.tool

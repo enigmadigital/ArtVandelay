@@ -33,6 +33,12 @@
 				$("textarea#settings-exported").val(JSON.stringify(response));
 			}
 
+			if(action === ACTION_IMPORT)
+			{
+				if(response.success) Craft.cp.displayNotice('Success!');
+				else Craft.cp.displayError(response.error);
+			}
+
 		});
 
 	});
