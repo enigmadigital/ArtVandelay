@@ -6,13 +6,13 @@
 		<div class="section importer">
 			<h2>Importer</h2>
 
-            <div class="field">
-                <div class="heading">
-                    <label for="data">Data</label>
-                    <div class="instructions">
-                        <p>Paste the JSON data to import.</p>
-                    </div>
-                </div>
+			<div class="field">
+				<div class="heading">
+					<label for="data">Data</label>
+					<div class="instructions">
+						<p>Paste the JSON data to import.</p>
+					</div>
+				</div>
 
 				<div class="input">
 					<textarea class="text nicetext fullwidth" rows="6" cols="50" id="data" name="data"></textarea>
@@ -20,25 +20,36 @@
 			</div>
 
 			<div class="buttons">
-				<input type="button" class="btn submit" value="Import" />
+				<input type="button" class="btn submit" id="import" value="Import" />
 			</div>
 		</div>
 
 		<div class="section exporter">
 			<h2>Exporter</h2>
-			
-			<h3>Field groups</h3>
 
 			{% for group in groups %}
 				<div class="field checkbox">
 					<label>
-						<input type="checkbox" name="group[{{ group.id }}]" /> {{ group.name }}
+						<input type="checkbox" name="group[{{ group.id }}]" value="{{ group.id }}" /> {{ group.name }}
 					</label>
 				</div>
 			{% endfor %}
 
+			<div class="field">
+				<div class="heading">
+					<label for="data">Data</label>
+					<div class="instructions">
+						<p>The exported data will appear here.</p>
+					</div>
+				</div>
+
+				<div class="input">
+					<textarea readonly="readonly" class="text nicetext fullwidth" rows="6" cols="50" id="exported" name="exported"></textarea>
+				</div>
+			</div>
+
 			<div class="buttons">
-				<input type="button" class="btn submit" value="Export" />
+				<input type="button" class="btn submit" id="export" value="Export" />
 			</div>
 		</div>
 	</div>

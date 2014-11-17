@@ -32,7 +32,7 @@ class ArtVandelayPlugin extends BasePlugin
 	public function registerCpRoutes()
 	{
 		return array(
-			//
+			// ?
 		);
 	}
 
