@@ -57,7 +57,7 @@ class ArtVandelayController extends BaseController
 			'sections' => $this->_exportSections()
 		);
 
-		$json = json_encode($result, JSON_PRETTY_PRINT);
+		$json = json_encode($result, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK);
 
 		if (craft()->request->getParam('download'))
 		{
@@ -95,9 +95,9 @@ class ArtVandelayController extends BaseController
 
 	private function _exportFields()
 	{
-		$selectedGroups = craft()->request->getParam('selectedGroups', '*');
+		$selectedIds = craft()->request->getParam('selectedGroups', '*');
 
-		if ($selectedGroups == '*')
+		if ($selectedIds == '*')
 		{
 			$groups = craft()->fields->getAllGroups();
 		}
@@ -105,9 +105,12 @@ class ArtVandelayController extends BaseController
 		{
 			$groups = array();
 
-			foreach ($selectedGroups as $id)
+			if (is_array($selectedIds))
 			{
-				$groups[] = craft()->fields->getGroupById($id);
+				foreach ($selectedIds as $id)
+				{
+					$groups[] = craft()->fields->getGroupById($id);
+				}
 			}
 		}
 
@@ -116,6 +119,25 @@ class ArtVandelayController extends BaseController
 
 	private function _exportSections()
 	{
-		return array();
+		$selectedIds = craft()->request->getParam('selectedSections', '*');
+
+		if ($selectedIds == '*')
+		{
+			$sections = craft()->sections->getAllSections();
+		}
+		else
+		{
+			$sections = array();
+
+			if (is_array($selectedIds))
+			{
+				foreach ($selectedIds as $id)
+				{
+					$sections[] = craft()->sections->getSectionById($id);
+				}
+			}
+		}
+
+		return craft()->artVandelay->exportSections($sections);
 	}
 }
