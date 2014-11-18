@@ -1,46 +1,15 @@
-(function()
-{
-	var ACTION_IMPORT = 'import';
-	var ACTION_EXPORT = 'export';
+(function() {
 
+  $('#export').on('submit', function(e) {
+    e.preventDefault();
 
-	$("input#settings-import, input#settings-export").on('click', function(event)
-	{
-		var button = $(event.currentTarget);
-		var action = button.attr('id').replace('settings-', '');
-		var data = { };
+    $('#exportResultContainer').removeClass('hidden');
+    $('#exportResult').text('');
 
-		if(action === ACTION_IMPORT)
-		{
-			data.data = $("textarea#settings-data").val();
-		}
-
-		if(action === ACTION_EXPORT)
-		{
-			data.groups = { };
-
-			$("div.exporter input[type='checkbox']:checked").each(function(index, element)
-			{
-				data.groups[$(element).val()] = 1;
-
-			});
-		}
-
-		Craft.postActionRequest('artVandelay/' + action + '/index', data, function(response)
-		{
-			if(action === ACTION_EXPORT)
-			{
-				$("textarea#settings-exported").val(JSON.stringify(response));
-			}
-
-			if(action === ACTION_IMPORT)
-			{
-				if(response.success) Craft.cp.displayNotice('Success!');
-				else Craft.cp.displayError(response.error);
-			}
-
-		});
-
-	});
+    Craft.postActionRequest('artVandelay/export', $(this).serialize(), function(response) {
+      var json = JSON.stringify(response, undefined, 2);
+      $('#exportResult').text(json);
+    });
+  });
 
 })();

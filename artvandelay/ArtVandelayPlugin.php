@@ -3,43 +3,40 @@
 
 class ArtVandelayPlugin extends BasePlugin
 {
-
-	public function defineSettings()
+	public function getName()
 	{
-		return array(
-			// ??
-		);
+		return 'Art Vandelay';
 	}
 
-
-	public function prepSettings($settings)
+	public function getVersion()
 	{
-		// ??
-
-		return $settings;
+		return '0.0.1';
 	}
 
-
-	public function getSettingsHtml()
+	public function getDeveloper()
 	{
-		return craft()->templates->render('artvandelay/settings/_index', array(
-			'settings' => $this->getSettings(),
-			'groups' => craft()->fields->getAllGroups()
-		));
+		return 'XO Digital';
 	}
 
+	public function getDeveloperUrl()
+	{
+		return 'http://www.xodigital.com.au';
+	}
+
+	public function hasCpSection()
+	{
+		return false;
+	}
+
+	public function getSettingsUrl()
+	{
+		return 'artVandelay/index';
+	}
 
 	public function registerCpRoutes()
 	{
 		return array(
-			// ?
+			'artVandelay/index' => array('action' => 'artVandelay/index'),
 		);
 	}
-
-	public function getName(){ return 'Art Vandelay'; }
-	public function getVersion(){ return '0.0.1'; }
-	public function getDeveloper(){ return 'XO Digital'; }
-	public function getDeveloperUrl(){ return 'http://www.xodigital.com.au'; }
-	public function hasCpSection(){ return false; }
-
 }
