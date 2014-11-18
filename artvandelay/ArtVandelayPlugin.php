@@ -30,13 +30,13 @@ class ArtVandelayPlugin extends BasePlugin
 
 	public function getSettingsUrl()
 	{
-		return 'artVandelay/index';
+		return 'artVandelay';
 	}
 
 	public function registerCpRoutes()
 	{
 		return array(
-			'artVandelay/index' => array('action' => 'artVandelay/index'),
+			'artVandelay' => array('action' => 'artVandelay/index'),
 		);
 	}
 }
