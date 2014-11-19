@@ -85,8 +85,6 @@ class ArtVandelayService extends BaseApplicationComponent
 
 		foreach ($sections as $section)
 		{
-			$structure    = craft()->structures->getStructureById($section->structureId);
-
 			$result[$section->handle] = array(
 				'name'             => $section->name,
 				'type'             => $section->type,
@@ -95,28 +93,12 @@ class ArtVandelayService extends BaseApplicationComponent
 				'maxLevels'        => $section->maxLevels,
 				'enableVersioning' => $section->enableVersioning,
 
-				'structure'  => $structure ? $this->_exportStructure($structure) : null,
 				'locales'    => $this->_exportLocales($section->getLocales()),
 				'entryTypes' => $this->_exportEntryTypes($section->getEntryTypes())
 			);
 		}
 
 		return $result;
-	}
-
-	private function _exportStructure(StructureModel $structure)
-	{
-		if ($structure)
-		{
-			return array(
-				'maxLevels'      => $structure->maxLevels,
-				'movePermission' => $structure->movePermission
-			);
-		}
-		else
-		{
-			return null;
-		}
 	}
 
 	private function _exportLocales(array $locales)
@@ -189,8 +171,124 @@ class ArtVandelayService extends BaseApplicationComponent
 		}
 	}
 
-	public function importSections($data)
+	public function importSections($sectionDefs)
 	{
+		$sections   = craft()->sections->getAllSections('handle');
+		$fields     = craft()->fields->getAllFields('handle');
+
+		foreach ($sectionDefs as $sectionHandle => $sectionDef)
+		{
+			$section = array_key_exists($sectionHandle, $sections)
+				? $sections[$sectionHandle]
+				: new SectionModel();
+
+			$section->handle = $sectionHandle;
+
+			$section->name             = $sectionDef->name;
+			$section->type             = $sectionDef->type;
+			$section->hasUrls          = $sectionDef->hasUrls;
+			$section->template         = $sectionDef->template;
+			$section->maxLevels        = $sectionDef->maxLevels;
+			$section->enableVersioning = $sectionDef->enableVersioning;
+
+			$locales = array();
+
+			foreach ($sectionDef->locales as $locale => $localeDef)
+			{
+				$locales[$locale] = new SectionLocaleModel(array(
+					'enabledByDefault' => $localeDef->enabledByDefault,
+					'urlFormat'        => $localeDef->urlFormat,
+					'nestedUrlFormat'  => $localeDef->nestedUrlFormat
+				));
+			}
+
+			$section->setLocales($locales);
+
+			if (!craft()->sections->saveSection($section))
+				return false;
+
+			$entryTypes = $section->getEntryTypes('handle');
+
+			foreach ($sectionDef->entryTypes as $entryTypeHandle => $entryTypeDef)
+			{
+				$entryType = array_key_exists($entryTypeHandle, $entryTypes)
+					? $entryTypes[$entryTypeHandle]
+					: new EntryTypeModel();
+
+				$entryType->sectionId = $section->id;
+				$entryType->handle    = $entryTypeHandle;
+
+				$entryType->name          = $entryTypeDef->name;
+				$entryType->hasTitleField = $entryTypeDef->hasTitleField;
+				$entryType->titleLabel    = $entryTypeDef->titleLabel;
+				$entryType->titleFormat   = $entryTypeDef->titleFormat;
+
+				$layoutTabs   = array();
+				$layoutFields = array();
+
+				if (property_exists($entryTypeDef->fieldLayout, 'tabs'))
+				{
+					$tabSortOrder = 0;
+
+					foreach ($entryTypeDef->fieldLayout->tabs as $tabName => $tabDef)
+					{
+						$layoutTabFields = array();
+
+						foreach ($tabDef as $fieldHandle => $required)
+						{
+							$fieldSortOrder = 0;
+
+							if (array_key_exists($fieldHandle, $fields))
+							{
+								$field = $fields[$fieldHandle];
+
+								$layoutField = new FieldLayoutFieldModel();
+								$layoutField->fieldId   = $field->id;
+								$layoutField->required  = $required;
+								$layoutField->sortOrder = ++$fieldSortOrder;
+
+								$layoutTabFields[] = $layoutField;
+								$layoutFields[]    = $layoutField;
+							}
+						}
+
+						$layoutTab = new FieldLayoutTabModel();
+						$layoutTab->name      = $tabName;
+						$layoutTab->sortOrder = ++$tabSortOrder;
+						$layoutTab->setFields($layoutTabFields);
+
+						$layoutTabs[] = $layoutTab;
+					}
+				}
+				else if (property_exists($entryTypeDef->fieldLayout, 'fields'))
+				{
+					$fieldSortOrder = 0;
+
+					foreach ($entryTypeDef->fieldLayout->fields as $fieldHandle => $required)
+					{
+						$field = $fields[$fieldHandle];
+
+						$layoutField = new FieldLayoutFieldModel();
+						$layoutField->fieldId   = $field->id;
+						$layoutField->required  = $required;
+						$layoutField->sortOrder = ++$fieldSortOrder;
+
+						$layoutFields[] = $layoutField;
+					}
+				}
+
+				$layout = new FieldLayoutModel();
+				$layout->type = ElementType::Entry;
+				$layout->setTabs($layoutTabs);
+				$layout->setFields($layoutFields);
+
+				$entryType->setFieldLayout($layout);
+
+				if (!craft()->sections->saveEntryType($entryType))
+					return false;
+			}
+		}
+
 		return true;
 	}
 }
