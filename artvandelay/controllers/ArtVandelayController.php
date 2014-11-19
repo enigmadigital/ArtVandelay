@@ -23,12 +23,12 @@ class ArtVandelayController extends BaseController
 
 			if (property_exists($data, 'fields'))
 			{
-				$ok = $ok && craft()->artVandelay->importFields($data->fields);
+				$ok = $ok && craft()->artVandelay_fields->import($data->fields);
 			}
 
 			if (property_exists($data, 'sections'))
 			{
-				$ok = $ok && craft()->artVandelay->importSections($data->sections);
+				$ok = $ok && craft()->artVandelay_sections->import($data->sections);
 			}
 
 			if ($ok)
@@ -114,7 +114,7 @@ class ArtVandelayController extends BaseController
 			}
 		}
 
-		return craft()->artVandelay->exportFields($groups);
+		return craft()->artVandelay_fields->export($groups);
 	}
 
 	private function _exportSections()
@@ -138,6 +138,6 @@ class ArtVandelayController extends BaseController
 			}
 		}
 
-		return craft()->artVandelay->exportSections($sections);
+		return craft()->artVandelay_sections->export($sections);
 	}
 }
