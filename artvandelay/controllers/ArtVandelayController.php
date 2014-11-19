@@ -6,7 +6,7 @@ class ArtVandelayController extends BaseController
 	{
 		$this->renderTemplate('artVandelay/_index', array(
 			'groupOptions'   => $this->_getGroupOptions(),
-			'sectionOptions' => $this->_getSectionOptions()
+			'entryTypeOptions' => $this->_getEntryTypeOptions()
 		));
 	}
 
@@ -44,7 +44,7 @@ class ArtVandelayController extends BaseController
 		craft()->userSession->setError('Get *out*! Invalid input data.');
 		craft()->urlManager->setRouteVariables(array(
 			'groupOptions'   => $this->_getGroupOptions(),
-			'sectionOptions' => $this->_getSectionOptions()
+			'entryTypeOptions' => $this->_getEntryTypeOptions()
 		));
 	}
 
@@ -81,16 +81,19 @@ class ArtVandelayController extends BaseController
 		return $groupOptions;
 	}
 
-	private function _getSectionOptions()
+	private function _getEntryTypeOptions()
 	{
-		$sectionOptions = array();
+		$entryTypeOptions = array();
 
 		foreach (craft()->sections->getAllSections() as $section)
 		{
-			$sectionOptions[$section->id] = $section->name;
+			foreach ($section->getEntryTypes() as $entryType)
+			{
+				$entryTypeOptions[$entryType->id] = $section->name.' - '.$entryType->name;
+			}
 		}
 
-		return $sectionOptions;
+		return $entryTypeOptions;
 	}
 
 	private function _exportFields()
@@ -119,25 +122,30 @@ class ArtVandelayController extends BaseController
 
 	private function _exportSections()
 	{
-		$selectedIds = craft()->request->getParam('selectedSections', '*');
+		$selectedIds = craft()->request->getParam('selectedEntryTypes', '*');
 
 		if ($selectedIds == '*')
 		{
-			$sections = craft()->sections->getAllSections();
+			$sections     = craft()->sections->getAllSections();
+			$entryTypeIds = null;
 		}
 		else
 		{
-			$sections = array();
+			$sections     = array();
+			$entryTypeIds = array();
 
 			if (is_array($selectedIds))
 			{
 				foreach ($selectedIds as $id)
 				{
-					$sections[] = craft()->sections->getSectionById($id);
+					$entryType = craft()->sections->getEntryTypeById($id);
+
+					$sections[]     = $entryType->getSection();
+					$entryTypeIds[] = $entryType->id;
 				}
 			}
 		}
 
-		return craft()->artVandelay_sections->export($sections);
+		return craft()->artVandelay_sections->export($sections, $entryTypeIds);
 	}
 }

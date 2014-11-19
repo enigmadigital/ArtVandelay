@@ -3,7 +3,7 @@ namespace Craft;
 
 class ArtVandelay_SectionsService extends BaseApplicationComponent
 {
-	public function export(array $sections)
+	public function export(array $sections, $allowedEntryTypeIds)
 	{
 		$sectionDefs = array();
 
@@ -24,14 +24,17 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 			foreach ($section->getEntryTypes() as $entryType)
 			{
-				$entryTypeDefs[$entryType->handle] = array(
-					'name'          => $entryType->name,
-					'hasTitleField' => $entryType->hasTitleField,
-					'titleLabel'    => $entryType->titleLabel,
-					'titleFormat'   => $entryType->titleFormat,
+				if ($allowedEntryTypeIds === null || in_array($entryType->id, $allowedEntryTypeIds))
+				{
+					$entryTypeDefs[$entryType->handle] = array(
+						'name'          => $entryType->name,
+						'hasTitleField' => $entryType->hasTitleField,
+						'titleLabel'    => $entryType->titleLabel,
+						'titleFormat'   => $entryType->titleFormat,
 
-					'fieldLayout' => $this->_exportFieldLayout($entryType->getFieldLayout())
-				);
+						'fieldLayout' => $this->_exportFieldLayout($entryType->getFieldLayout())
+					);
+				}
 			}
 
 			$sectionDefs[$section->handle] = array(

@@ -49,7 +49,7 @@
         <div class="grid">
           <div class="item">
             {{ forms.checkboxSelectField({
-              label: 'Field groups',
+              label: 'Fields',
               name: 'selectedGroups',
               options: groupOptions
             }) }}
@@ -58,8 +58,8 @@
           <div class="item">
             {{ forms.checkboxSelectField({
               label: 'Sections',
-              name: 'selectedSections',
-              options: sectionOptions
+              name: 'selectedEntryTypes',
+              options: entryTypeOptions
             }) }}
           </div>
         </div>
