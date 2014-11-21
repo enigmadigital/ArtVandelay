@@ -31,10 +31,11 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 	public function import($groupDefs)
 	{
-		$groups = craft()->fields->getAllGroups('name');
-		$fields = craft()->fields->getAllFields('handle');
+		$groups     = craft()->fields->getAllGroups('name');
+		$fields     = craft()->fields->getAllFields('handle');
+		$fieldTypes = craft()->fields->getAllFieldTypes();
 
-		if (!is_array($groupDefs))
+		if (!is_array($groupDefs) && !is_object($groupDefs))
 		{
 			return false;
 		}
@@ -50,29 +51,34 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 			if (!craft()->fields->saveGroup($group))
 				return false;
 
-			if (!is_array($fieldDefs))
+			if (!is_array($fieldDefs) && !is_object($fieldDefs))
 			{
 				return false;
 			}
 
 			foreach ($fieldDefs as $fieldHandle => $fieldDef)
 			{
-				$field = array_key_exists($fieldHandle, $fields)
-					? $fields[$fieldHandle]
-					: new FieldModel();
+				if (in_array($fieldDef->type, $fieldTypes))
+				{
+					$field = array_key_exists($fieldHandle, $fields)
+						? $fields[$fieldHandle]
+						: new FieldModel();
 
-				$field->handle  = $fieldHandle;
-				$field->groupId = $group->id;
+					$field->handle  = $fieldHandle;
+					$field->groupId = $group->id;
 
-				$field->name         = $fieldDef->name;
-				$field->context      = $fieldDef->context;
-				$field->instructions = $fieldDef->instructions;
-				$field->translatable = $fieldDef->translatable;
-				$field->type         = $fieldDef->type;
-				$field->settings     = (array) $fieldDef->settings;
+					$field->name         = $fieldDef->name;
+					$field->context      = $fieldDef->context;
+					$field->instructions = $fieldDef->instructions;
+					$field->translatable = $fieldDef->translatable;
+					$field->type         = $fieldDef->type;
+					$field->settings     = (array) $fieldDef->settings;
 
-				if (!craft()->fields->saveField($field))
-					return false;
+					if (!craft()->fields->saveField($field))
+					{
+						return false;
+					}
+				}
 			}
 		}
 
