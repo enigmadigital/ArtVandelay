@@ -92,7 +92,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 	{
 		$sections = craft()->sections->getAllSections('handle');
 
-		if (!is_array($sectionDefs))
+		if (!is_array($sectionDefs) && !is_object($sectionDefs))
 		{
 			return false;
 		}
@@ -112,7 +112,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 			$section->maxLevels        = $sectionDef->maxLevels;
 			$section->enableVersioning = $sectionDef->enableVersioning;
 
-			if (!is_array($sectionDef->locales))
+			if (!is_array($sectionDef->locales) && !is_object($sectionDef->locales))
 			{
 				return false;
 			}
@@ -135,7 +135,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 			$entryTypes = $section->getEntryTypes('handle');
 
-			if (!is_array($sectionDef->entryTypes))
+			if (!is_array($sectionDef->entryTypes) && !is_object($sectionDef->entryTypes))
 			{
 				return false;
 			}
@@ -155,6 +155,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				$entryType->titleFormat   = $entryTypeDef->titleFormat;
 
 				$fieldLayout = $this->_importFieldLayout($entryTypeDef->fieldLayout);
+
 				$entryType->setFieldLayout($fieldLayout);
 
 				if (!craft()->sections->saveEntryType($entryType))
@@ -174,14 +175,14 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 		{
 			$tabSortOrder = 0;
 
-			if (!is_array($fieldLayoutDef->tabs))
+			if (!is_array($fieldLayoutDef->tabs) && !is_object($fieldLayoutDef->tabs))
 			{
 				return false;
 			}
 
 			foreach ($fieldLayoutDef->tabs as $tabName => $tabDef)
 			{
-				if (!is_array($tabDef))
+				if (!is_array($tabDef) && !is_object($tabDef))
 				{
 					return false;
 				}
@@ -217,7 +218,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 		{
 			$fieldSortOrder = 0;
 
-			if (!is_array($fieldLayoutDef->fields))
+			if (!is_array($fieldLayoutDef->fields) && !is_object($fieldLayoutDef->fields))
 			{
 				return false;
 			}
