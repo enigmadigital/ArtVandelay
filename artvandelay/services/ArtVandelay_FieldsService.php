@@ -35,9 +35,9 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 		$fields     = craft()->fields->getAllFields('handle');
 		$fieldTypes = craft()->fields->getAllFieldTypes();
 
-		if (!is_array($groupDefs) && !is_object($groupDefs))
+		if (!is_object($groupDefs))
 		{
-			return false;
+			return array('ok' => false, 'errors' => array('`fields` must be an object'));
 		}
 
 		foreach ($groupDefs as $groupName => $fieldDefs)
@@ -49,16 +49,18 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 			$group->name = $groupName;
 
 			if (!craft()->fields->saveGroup($group))
-				return false;
-
-			if (!is_array($fieldDefs) && !is_object($fieldDefs))
 			{
-				return false;
+				return array('ok' => false, 'errors' => $group->getAllErrors());
+			}
+
+			if (!is_object($fieldDefs))
+			{
+				return array('ok' => false, 'errors' => array('`fields[handle]` must be an object'));
 			}
 
 			foreach ($fieldDefs as $fieldHandle => $fieldDef)
 			{
-				if (in_array($fieldDef->type, $fieldTypes))
+				if (array_key_exists($fieldDef->type, $fieldTypes))
 				{
 					$field = array_key_exists($fieldHandle, $fields)
 						? $fields[$fieldHandle]
@@ -76,12 +78,12 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 					if (!craft()->fields->saveField($field))
 					{
-						return false;
+						return array('ok' => false, 'errors' => $field->getAllErrors());
 					}
 				}
 			}
 		}
 
-		return true;
+		return array('ok' => true, 'errors' => array());
 	}
 }

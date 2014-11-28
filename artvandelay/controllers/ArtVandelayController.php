@@ -17,21 +17,23 @@ class ArtVandelayController extends BaseController
 		$json = craft()->request->getParam('data', '{}');
 		$data = json_decode($json);
 
+		$errors = array();
+
 		if ($data)
 		{
-			$ok = true;
-
 			if (property_exists($data, 'fields'))
 			{
-				$ok = $ok && craft()->artVandelay_fields->import($data->fields);
+				$result = craft()->artVandelay_fields->import($data->fields);
+				$errors = array_merge($errors, $result['errors']);
 			}
 
 			if (property_exists($data, 'sections'))
 			{
-				$ok = $ok && craft()->artVandelay_sections->import($data->sections);
+				$result = craft()->artVandelay_sections->import($data->sections);
+				$errors = array_merge($errors, $result['errors']);
 			}
 
-			if ($ok)
+			if (!$errors)
 			{
 				craft()->userSession->setNotice('All done.');
 				$this->redirectToPostedUrl();
@@ -39,9 +41,12 @@ class ArtVandelayController extends BaseController
 				return;
 			}
 		}
+		else
+		{
+			$errors[] = 'Invalid JSON';
+		}
 
-		// TODO: tell the folks what actually went wrong
-		craft()->userSession->setError('Get *out*! Invalid input data.');
+		craft()->userSession->setError('Get *out*! ' . implode(', ', $errors));
 		craft()->urlManager->setRouteVariables(array(
 			'groupOptions'   => $this->_getGroupOptions(),
 			'entryTypeOptions' => $this->_getEntryTypeOptions()

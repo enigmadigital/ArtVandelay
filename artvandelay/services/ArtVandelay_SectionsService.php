@@ -92,9 +92,11 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 	{
 		$sections = craft()->sections->getAllSections('handle');
 
-		if (!is_array($sectionDefs) && !is_object($sectionDefs))
+		if (!is_object($sectionDefs))
 		{
-			return false;
+			return array('ok' => false, 'errors' => array(
+				'`sections` must exist and be an object'
+			));
 		}
 
 		foreach ($sectionDefs as $sectionHandle => $sectionDef)
@@ -112,32 +114,41 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 			$section->maxLevels        = $sectionDef->maxLevels;
 			$section->enableVersioning = $sectionDef->enableVersioning;
 
-			if (!is_array($sectionDef->locales) && !is_object($sectionDef->locales))
+			if (!property_exists($sectionDef, 'locales') || !is_object($sectionDef->locales))
 			{
-				return false;
+				return array('ok' => false, 'errors' => array(
+					'`sections[handle].locales` must exist and be an object'
+				));
 			}
 
-			$locales = array();
+			$locales = $section->getLocales();
 
 			foreach ($sectionDef->locales as $localeId => $localeDef)
 			{
-				$locales[$localeId] = new SectionLocaleModel(array(
-					'enabledByDefault' => $localeDef->enabledByDefault,
-					'urlFormat'        => $localeDef->urlFormat,
-					'nestedUrlFormat'  => $localeDef->nestedUrlFormat
-				));
+				$locale = array_key_exists($localeId, $locales)
+					? $locales[$localeId]
+					: new SectionLocaleModel();
+
+				$locale->locale = $localeId;
+				$locale->enabledByDefault = $localeDef->enabledByDefault;
+				$locale->urlFormat = $localeDef->urlFormat;
+				$locale->nestedUrlFormat = $localeDef->nestedUrlFormat;
 			}
 
 			$section->setLocales($locales);
 
 			if (!craft()->sections->saveSection($section))
-				return false;
+			{
+				return array('ok' => false, 'errors' => $section->getAllErrors());
+			}
 
 			$entryTypes = $section->getEntryTypes('handle');
 
-			if (!is_array($sectionDef->entryTypes) && !is_object($sectionDef->entryTypes))
+			if (!property_exists($sectionDef, 'entryTypes') || !is_object($sectionDef->entryTypes))
 			{
-				return false;
+				return array('ok' => false, 'errors' => array(
+					'`sections[handle].entryTypes` must exist and be an object'
+				));
 			}
 
 			foreach ($sectionDef->entryTypes as $entryTypeHandle => $entryTypeDef)
@@ -154,16 +165,24 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				$entryType->titleLabel    = $entryTypeDef->titleLabel;
 				$entryType->titleFormat   = $entryTypeDef->titleFormat;
 
-				$fieldLayout = $this->_importFieldLayout($entryTypeDef->fieldLayout);
+				$result = $this->_importFieldLayout($entryTypeDef->fieldLayout);
+				if ($result['fieldLayout'])
+				{
+					$entryType->setFieldLayout($result['fieldLayout']);
 
-				$entryType->setFieldLayout($fieldLayout);
-
-				if (!craft()->sections->saveEntryType($entryType))
-					return false;
+					if (!craft()->sections->saveEntryType($entryType))
+					{
+						return array('ok' => false, 'errors' => $entryType->getAllErrors());
+					}
+				}
+				else
+				{
+					return array('ok' => false, $result['errors']);
+				}
 			}
 		}
 
-		return true;
+		return array('ok' => true, 'errors' => array());
 	}
 
 	private function _importFieldLayout($fieldLayoutDef)
@@ -175,16 +194,16 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 		{
 			$tabSortOrder = 0;
 
-			if (!is_array($fieldLayoutDef->tabs) && !is_object($fieldLayoutDef->tabs))
+			if (!is_object($fieldLayoutDef->tabs))
 			{
-				return false;
+				return array('fieldLayout' => null, 'errors' => array('`sections[handle].entryTypes[handle].fieldLayout.tabs` must be an object'));
 			}
 
 			foreach ($fieldLayoutDef->tabs as $tabName => $tabDef)
 			{
-				if (!is_array($tabDef) && !is_object($tabDef))
+				if (!is_object($tabDef))
 				{
-					return false;
+					return array('fieldLayout' => null, 'errors' => array('`sections[handle].entryTypes[handle].fieldLayout.tabs[handle]` must be an object'));
 				}
 
 				$layoutTabFields = array();
@@ -218,9 +237,9 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 		{
 			$fieldSortOrder = 0;
 
-			if (!is_array($fieldLayoutDef->fields) && !is_object($fieldLayoutDef->fields))
+			if (!is_object($fieldLayoutDef->fields))
 			{
-				return false;
+				return array('fieldLayout' => null, 'errors' => array('`sections[handle].entryTypes[handle].fieldLayout.fields` must be an object'));
 			}
 
 			foreach ($fieldLayoutDef->fields as $fieldHandle => $required)
@@ -243,6 +262,6 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 		$fieldLayout->setTabs($layoutTabs);
 		$fieldLayout->setFields($layoutFields);
 
-		return $fieldLayout;
+		return array('fieldLayout' => $fieldLayout, 'errors' => array());
 	}
 }
