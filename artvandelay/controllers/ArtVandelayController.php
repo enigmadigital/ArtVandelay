@@ -2,6 +2,7 @@
 
 class ArtVandelayController extends BaseController
 {
+
 	public function actionIndex()
 	{
 		$this->renderTemplate('artVandelay/_index', array(
@@ -9,6 +10,7 @@ class ArtVandelayController extends BaseController
 			'entryTypeOptions' => $this->_getEntryTypeOptions()
 		));
 	}
+
 
 	public function actionImport()
 	{
@@ -53,16 +55,17 @@ class ArtVandelayController extends BaseController
 		));
 	}
 
+
 	public function actionExport()
 	{
 		$this->requirePostRequest();
 
-		$result = array(
-			'fields'   => $this->_exportFields(),
+		$result = new ArtVandelay_ExportedDataModel(array(
+			'fields' => $this->_exportFields(),
 			'sections' => $this->_exportSections()
-		);
+		));
 
-		$json = json_encode($result, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK);
+		$json = $result->toJson();
 
 		if (craft()->request->getParam('download'))
 		{
@@ -73,6 +76,7 @@ class ArtVandelayController extends BaseController
 		echo $json;
 		craft()->end();
 	}
+
 
 	private function _getGroupOptions()
 	{
@@ -85,6 +89,7 @@ class ArtVandelayController extends BaseController
 
 		return $groupOptions;
 	}
+
 
 	private function _getEntryTypeOptions()
 	{
@@ -100,6 +105,7 @@ class ArtVandelayController extends BaseController
 
 		return $entryTypeOptions;
 	}
+
 
 	private function _exportFields()
 	{
@@ -124,6 +130,7 @@ class ArtVandelayController extends BaseController
 
 		return craft()->artVandelay_fields->export($groups);
 	}
+
 
 	private function _exportSections()
 	{
@@ -153,4 +160,5 @@ class ArtVandelayController extends BaseController
 
 		return craft()->artVandelay_sections->export($sections, $entryTypeIds);
 	}
+
 }

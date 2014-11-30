@@ -1,8 +1,8 @@
-<?php
-namespace Craft;
+<?php namespace Craft;
 
 class ArtVandelay_FieldsService extends BaseApplicationComponent
 {
+
 	public function export(array $groups)
 	{
 		$groupDefs = array();
@@ -28,6 +28,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 		return $groupDefs;
 	}
+
 
 	public function import($groupDefs)
 	{
