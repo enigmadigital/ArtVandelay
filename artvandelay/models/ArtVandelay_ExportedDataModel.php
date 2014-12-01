@@ -9,10 +9,24 @@
 class ArtVandelay_ExportedDataModel extends BaseModel
 {
 
+	/**
+	 * Creates an ArtVandelay_ExportedDataModel from JSON input.
+	 *
+	 * @param string $json The input JSON.
+	 *
+	 * @return ArtVandelay_ExportedDataModel|null The new ArtVandelay_ExportedDataMode on success, null on invalid JSON.
+	 */
+	public static function fromJson($json)
+	{
+		$data = json_decode($json, true);
+		return $data === null ? null : new static($data);
+	}
+
+
 	protected function defineAttributes()
 	{
 		return array(
-			'fields' => AttributeType::Mixed,
+			'fields'   => AttributeType::Mixed,
 			'sections' => AttributeType::Mixed
 		);
 	}

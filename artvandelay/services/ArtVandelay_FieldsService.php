@@ -30,15 +30,26 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 	}
 
 
+	/**
+	 * Attempt to import fields.
+	 *
+	 * @param $groupDefs
+	 *
+	 * @return ArtVandelay_ResultModel
+	 */
 	public function import($groupDefs)
 	{
+		$result = new ArtVandelay_ResultModel();
+
+		if($groupDefs === null) return $result;
+
 		$groups     = craft()->fields->getAllGroups('name');
 		$fields     = craft()->fields->getAllFields('handle');
 		$fieldTypes = craft()->fields->getAllFieldTypes();
 
 		if (!is_object($groupDefs))
 		{
-			return array('ok' => false, 'errors' => array('`fields` must be an object'));
+			return $result->error('`fields` must be an object');
 		}
 
 		foreach ($groupDefs as $groupName => $fieldDefs)
@@ -51,12 +62,12 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 			if (!craft()->fields->saveGroup($group))
 			{
-				return array('ok' => false, 'errors' => $group->getAllErrors());
+				return $result->error($group->getAllErrors());
 			}
 
 			if (!is_object($fieldDefs))
 			{
-				return array('ok' => false, 'errors' => array('`fields[handle]` must be an object'));
+				return $result->error('`fields[handle]` must be an object');
 			}
 
 			foreach ($fieldDefs as $fieldHandle => $fieldDef)
@@ -79,12 +90,12 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 					if (!craft()->fields->saveField($field))
 					{
-						return array('ok' => false, 'errors' => $field->getAllErrors());
+						return $result->error($field->getAllErrors());
 					}
 				}
 			}
 		}
 
-		return array('ok' => true, 'errors' => array());
+		return $result;
 	}
 }

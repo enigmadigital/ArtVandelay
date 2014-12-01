@@ -3,6 +3,7 @@ namespace Craft;
 
 class ArtVandelay_SectionsService extends BaseApplicationComponent
 {
+
 	public function export(array $sections, $allowedEntryTypeIds)
 	{
 		$sectionDefs = array();
@@ -88,8 +89,15 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 		}
 	}
 
+
 	public function import($sectionDefs)
 	{
+		if($sectionDefs === null)
+		{
+			// No sections are being imported, ignore this call.
+			return array('ok' => true, 'errors' => array());
+		}
+
 		$sections = craft()->sections->getAllSections('handle');
 
 		if (!is_object($sectionDefs))
@@ -184,6 +192,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 		return array('ok' => true, 'errors' => array());
 	}
+
 
 	private function _importFieldLayout($fieldLayoutDef)
 	{

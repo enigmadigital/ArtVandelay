@@ -6,7 +6,7 @@ class ArtVandelayController extends BaseController
 	public function actionIndex()
 	{
 		$this->renderTemplate('artVandelay/_index', array(
-			'groupOptions'   => $this->_getGroupOptions(),
+			'groupOptions'     => $this->_getGroupOptions(),
 			'entryTypeOptions' => $this->_getEntryTypeOptions()
 		));
 	}
@@ -17,25 +17,19 @@ class ArtVandelayController extends BaseController
 		$this->requirePostRequest();
 
 		$json = craft()->request->getParam('data', '{}');
-		$data = json_decode($json);
+		$data = ArtVandelay_ExportedDataModel::fromJson($json);
 
-		$errors = array();
+		$result = new ArtVandelay_ResultModel();
 
-		if ($data)
+		if ($data !== null)
 		{
-			if (property_exists($data, 'fields'))
-			{
-				$result = craft()->artVandelay_fields->import($data->fields);
-				$errors = array_merge($errors, $result['errors']);
-			}
+			$fieldImportResult = craft()->artVandelay_fields->import($data->fields);
+			$sectionImportResult = craft()->artVandelay_sections->import($data->sections);
 
-			if (property_exists($data, 'sections'))
-			{
-				$result = craft()->artVandelay_sections->import($data->sections);
-				$errors = array_merge($errors, $result['errors']);
-			}
+			$result->consume($fieldImportResult);
+			//$result->consume($sectionImportResult);
 
-			if (!$errors)
+			if ($result->ok)
 			{
 				craft()->userSession->setNotice('All done.');
 				$this->redirectToPostedUrl();
@@ -45,12 +39,13 @@ class ArtVandelayController extends BaseController
 		}
 		else
 		{
-			$errors[] = 'Invalid JSON';
+			$errors[] = 'Invalid JSON.';
 		}
 
-		craft()->userSession->setError('Get *out*! ' . implode(', ', $errors));
+		craft()->userSession->setError('Get *out*! ' . implode(', ', $result->errors));
+
 		craft()->urlManager->setRouteVariables(array(
-			'groupOptions'   => $this->_getGroupOptions(),
+			'groupOptions'     => $this->_getGroupOptions(),
 			'entryTypeOptions' => $this->_getEntryTypeOptions()
 		));
 	}
