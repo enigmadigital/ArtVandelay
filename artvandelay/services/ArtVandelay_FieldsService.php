@@ -33,7 +33,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 	/**
 	 * Attempt to import fields.
 	 *
-	 * @param Array $groupDefs
+	 * @param array $groupDefs
 	 *
 	 * @return ArtVandelay_ResultModel
 	 */

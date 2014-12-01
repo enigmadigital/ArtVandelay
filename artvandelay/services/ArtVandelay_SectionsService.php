@@ -88,19 +88,25 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 	}
 
 
-	public function import($sectionDefs)
+	/**
+	 * Attempt to import sections.
+	 *
+	 * @param array $sectionDefs
+	 *
+	 * @return ArtVandelay_ResultModel
+	 */
+	public function import(Array $sectionDefs)
 	{
 		$result = new ArtVandelay_ResultModel();
 
-		if(empty($sectionDefs)) return $result;
+		if(empty($sectionDefs))
+		{
+			// Ignore importing sections.
+			return $result;
+		}
 
 
 		$sections = craft()->sections->getAllSections('handle');
-
-		if (!is_object($sectionDefs))
-		{
-			return $result->error('`sections` must exist and be an object');
-		}
 
 		foreach ($sectionDefs as $sectionHandle => $sectionDef)
 		{
@@ -108,32 +114,35 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				? $sections[$sectionHandle]
 				: new SectionModel();
 
-			$section->handle = $sectionHandle;
+			$section->setAttributes(array(
+				'handle'           => $sectionHandle,
+				'name'             => $sectionDef['name'],
+				'type'             => $sectionDef['type'],
+				'hasUrls'          => $sectionDef['hasUrls'],
+				'template'         => $sectionDef['template'],
+				'maxLevels'        => $sectionDef['maxLevels'],
+				'enableVersioning' => $sectionDef['enableVersioning']
+			));
 
-			$section->name             = $sectionDef->name;
-			$section->type             = $sectionDef->type;
-			$section->hasUrls          = $sectionDef->hasUrls;
-			$section->template         = $sectionDef->template;
-			$section->maxLevels        = $sectionDef->maxLevels;
-			$section->enableVersioning = $sectionDef->enableVersioning;
-
-			if (!property_exists($sectionDef, 'locales') || !is_object($sectionDef->locales))
+			if (!array_key_exists('locales', $sectionDef))
 			{
-				return $result->error('`sections[handle].locales` must exist and be an object');
+				return $result->error('`sections[handle].locales` must be defined');
 			}
 
 			$locales = $section->getLocales();
 
-			foreach ($sectionDef->locales as $localeId => $localeDef)
+			foreach ($sectionDef['locales'] as $localeId => $localeDef)
 			{
 				$locale = array_key_exists($localeId, $locales)
 					? $locales[$localeId]
 					: new SectionLocaleModel();
 
-				$locale->locale = $localeId;
-				$locale->enabledByDefault = $localeDef->enabledByDefault;
-				$locale->urlFormat = $localeDef->urlFormat;
-				$locale->nestedUrlFormat = $localeDef->nestedUrlFormat;
+				$locale->setAttributes(array(
+					'locale'           => $localeId,
+					'enabledByDefault' => $localeDef['enabledByDefault'],
+					'urlFormat'        => $localeDef['urlFormat'],
+					'nestedUrlFormat'  => $localeDef['nestedUrlFormat']
+				));
 			}
 
 			$section->setLocales($locales);
@@ -145,30 +154,31 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 			$entryTypes = $section->getEntryTypes('handle');
 
-			if (!property_exists($sectionDef, 'entryTypes') || !is_object($sectionDef->entryTypes))
+			if (!array_key_exists('entryTypes', $sectionDef))
 			{
-				return $result->error('`sections[handle].entryTypes` must exist and be an object');
+				return $result->error('`sections[handle].entryTypes` must exist be defined');
 			}
 
-			foreach ($sectionDef->entryTypes as $entryTypeHandle => $entryTypeDef)
+			foreach ($sectionDef['entryTypes'] as $entryTypeHandle => $entryTypeDef)
 			{
 				$entryType = array_key_exists($entryTypeHandle, $entryTypes)
 					? $entryTypes[$entryTypeHandle]
 					: new EntryTypeModel();
 
-				$entryType->sectionId = $section->id;
-				$entryType->handle    = $entryTypeHandle;
+				$entryType->setAttributes(array(
+					'sectionId'     => $section->id,
+					'handle'        => $entryTypeHandle,
+					'name'          => $entryTypeDef['name'],
+					'hasTitleField' => $entryTypeDef['hasTitleField'],
+					'titleLabel'    => $entryTypeDef['titleLabel'],
+					'titleFormat'   => $entryTypeDef['titleFormat']
+				));
 
-				$entryType->name          = $entryTypeDef->name;
-				$entryType->hasTitleField = $entryTypeDef->hasTitleField;
-				$entryType->titleLabel    = $entryTypeDef->titleLabel;
-				$entryType->titleFormat   = $entryTypeDef->titleFormat;
+				$fieldLayout = $this->_importFieldLayout($entryTypeDef['fieldLayout']);
 
-				$importResult = $this->_importFieldLayout($entryTypeDef->fieldLayout);
-
-				if ($importResult['fieldLayout'])
+				if($fieldLayout !== null)
 				{
-					$entryType->setFieldLayout($importResult['fieldLayout']);
+					$entryType->setFieldLayout($fieldLayout);
 
 					if (!craft()->sections->saveEntryType($entryType))
 					{
@@ -177,7 +187,8 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				}
 				else
 				{
-					return $result->error($importResult['errors']);
+					// Todo: Too ambiguous.
+					return $result->error('Failed to import field layout.');
 				}
 			}
 		}
@@ -186,27 +197,24 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 	}
 
 
-	private function _importFieldLayout($fieldLayoutDef)
+	/**
+	 * Attempt to import a field layout.
+	 *
+	 * @param array $fieldLayoutDef
+	 *
+	 * @return FieldLayoutModel
+	 */
+	private function _importFieldLayout(Array $fieldLayoutDef)
 	{
 		$layoutTabs   = array();
 		$layoutFields = array();
 
-		if (property_exists($fieldLayoutDef, 'tabs'))
+		if (array_key_exists('tabs', $fieldLayoutDef))
 		{
 			$tabSortOrder = 0;
 
-			if (!is_object($fieldLayoutDef->tabs))
+			foreach ($fieldLayoutDef['tabs'] as $tabName => $tabDef)
 			{
-				return array('fieldLayout' => null, 'errors' => array('`sections[handle].entryTypes[handle].fieldLayout.tabs` must be an object'));
-			}
-
-			foreach ($fieldLayoutDef->tabs as $tabName => $tabDef)
-			{
-				if (!is_object($tabDef))
-				{
-					return array('fieldLayout' => null, 'errors' => array('`sections[handle].entryTypes[handle].fieldLayout.tabs[handle]` must be an object'));
-				}
-
 				$layoutTabFields = array();
 
 				foreach ($tabDef as $fieldHandle => $required)
@@ -214,12 +222,16 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 					$fieldSortOrder = 0;
 
 					$field = craft()->fields->getFieldByHandle($fieldHandle);
+
 					if ($field)
 					{
 						$layoutField = new FieldLayoutFieldModel();
-						$layoutField->fieldId   = $field->id;
-						$layoutField->required  = $required;
-						$layoutField->sortOrder = ++$fieldSortOrder;
+
+						$layoutField->setAttributes(array(
+							'fieldId'   => $field->id,
+							'required'  => $required,
+							'sortOrder' => ++$fieldSortOrder
+						));
 
 						$layoutTabFields[] = $layoutField;
 						$layoutFields[] = $layoutField;
@@ -227,31 +239,35 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				}
 
 				$layoutTab = new FieldLayoutTabModel();
-				$layoutTab->name      = $tabName;
-				$layoutTab->sortOrder = ++$tabSortOrder;
+
+				$layoutTab->setAttributes(array(
+					'name' => $tabName,
+					'sortOrder' => ++$tabSortOrder
+				));
+
 				$layoutTab->setFields($layoutTabFields);
 
 				$layoutTabs[] = $layoutTab;
 			}
 		}
-		else if (property_exists($fieldLayoutDef, 'fields'))
+
+		else if (array_key_exists('fields', $fieldLayoutDef))
 		{
 			$fieldSortOrder = 0;
 
-			if (!is_object($fieldLayoutDef->fields))
-			{
-				return array('fieldLayout' => null, 'errors' => array('`sections[handle].entryTypes[handle].fieldLayout.fields` must be an object'));
-			}
-
-			foreach ($fieldLayoutDef->fields as $fieldHandle => $required)
+			foreach ($fieldLayoutDef['fields'] as $fieldHandle => $required)
 			{
 				$field = craft()->fields->getFieldByHandle($fieldHandle);
+
 				if ($field)
 				{
 					$layoutField = new FieldLayoutFieldModel();
-					$layoutField->fieldId   = $field->id;
-					$layoutField->required  = $required;
-					$layoutField->sortOrder = ++$fieldSortOrder;
+
+					$layoutField->setAttributes(array(
+						'fieldId'   => $field->id,
+						'required'  => $required,
+						'sortOrder' => ++$fieldSortOrder
+					));
 
 					$layoutFields[] = $layoutField;
 				}
@@ -263,6 +279,6 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 		$fieldLayout->setTabs($layoutTabs);
 		$fieldLayout->setFields($layoutFields);
 
-		return array('fieldLayout' => $fieldLayout, 'errors' => array());
+		return $fieldLayout;
 	}
 }
