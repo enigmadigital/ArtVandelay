@@ -4,7 +4,7 @@ Art Vandelay allows you to import and export content data from a [Craft](http://
 
 ### Releases
 
-* [v1.0.0 - Current](https://github.com/xodigital/ArtVandelay/releases/tag/v1.0.0)
+* [v1.0.1 - Current](https://github.com/xodigital/ArtVandelay/releases/tag/v1.0.1)
 	* Import and export [fields](http://buildwithcraft.com/docs/fields) and [sections](http://buildwithcraft.com/docs/sections-and-entries).
 
 ### Installation
