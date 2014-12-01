@@ -27,7 +27,7 @@ class ArtVandelayController extends BaseController
 			$sectionImportResult = craft()->artVandelay_sections->import($data->sections);
 
 			$result->consume($fieldImportResult);
-			//$result->consume($sectionImportResult);
+			$result->consume($sectionImportResult);
 
 			if ($result->ok)
 			{

@@ -32,8 +32,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 						'hasTitleField' => $entryType->hasTitleField,
 						'titleLabel'    => $entryType->titleLabel,
 						'titleFormat'   => $entryType->titleFormat,
-
-						'fieldLayout' => $this->_exportFieldLayout($entryType->getFieldLayout())
+						'fieldLayout'   => $this->_exportFieldLayout($entryType->getFieldLayout())
 					);
 				}
 			}
@@ -45,9 +44,8 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				'template'         => $section->template,
 				'maxLevels'        => $section->maxLevels,
 				'enableVersioning' => $section->enableVersioning,
-
-				'locales'    => $localeDefs,
-				'entryTypes' => $entryTypeDefs
+				'locales'          => $localeDefs,
+				'entryTypes'       => $entryTypeDefs
 			);
 		}
 
@@ -92,19 +90,16 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 	public function import($sectionDefs)
 	{
-		if($sectionDefs === null)
-		{
-			// No sections are being imported, ignore this call.
-			return array('ok' => true, 'errors' => array());
-		}
+		$result = new ArtVandelay_ResultModel();
+
+		if(empty($sectionDefs)) return $result;
+
 
 		$sections = craft()->sections->getAllSections('handle');
 
 		if (!is_object($sectionDefs))
 		{
-			return array('ok' => false, 'errors' => array(
-				'`sections` must exist and be an object'
-			));
+			return $result->error('`sections` must exist and be an object');
 		}
 
 		foreach ($sectionDefs as $sectionHandle => $sectionDef)
@@ -124,9 +119,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 			if (!property_exists($sectionDef, 'locales') || !is_object($sectionDef->locales))
 			{
-				return array('ok' => false, 'errors' => array(
-					'`sections[handle].locales` must exist and be an object'
-				));
+				return $result->error('`sections[handle].locales` must exist and be an object');
 			}
 
 			$locales = $section->getLocales();
@@ -147,16 +140,14 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 			if (!craft()->sections->saveSection($section))
 			{
-				return array('ok' => false, 'errors' => $section->getAllErrors());
+				return $result->error($section->getAllErrors());
 			}
 
 			$entryTypes = $section->getEntryTypes('handle');
 
 			if (!property_exists($sectionDef, 'entryTypes') || !is_object($sectionDef->entryTypes))
 			{
-				return array('ok' => false, 'errors' => array(
-					'`sections[handle].entryTypes` must exist and be an object'
-				));
+				return $result->error('`sections[handle].entryTypes` must exist and be an object');
 			}
 
 			foreach ($sectionDef->entryTypes as $entryTypeHandle => $entryTypeDef)
@@ -173,24 +164,25 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				$entryType->titleLabel    = $entryTypeDef->titleLabel;
 				$entryType->titleFormat   = $entryTypeDef->titleFormat;
 
-				$result = $this->_importFieldLayout($entryTypeDef->fieldLayout);
-				if ($result['fieldLayout'])
+				$importResult = $this->_importFieldLayout($entryTypeDef->fieldLayout);
+
+				if ($importResult['fieldLayout'])
 				{
-					$entryType->setFieldLayout($result['fieldLayout']);
+					$entryType->setFieldLayout($importResult['fieldLayout']);
 
 					if (!craft()->sections->saveEntryType($entryType))
 					{
-						return array('ok' => false, 'errors' => $entryType->getAllErrors());
+						return $result->error($entryType->getAllErrors());
 					}
 				}
 				else
 				{
-					return array('ok' => false, $result['errors']);
+					return $result->error($importResult['errors']);
 				}
 			}
 		}
 
-		return array('ok' => true, 'errors' => array());
+		return $result;
 	}
 
 

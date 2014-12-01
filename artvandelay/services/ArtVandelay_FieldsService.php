@@ -33,24 +33,23 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 	/**
 	 * Attempt to import fields.
 	 *
-	 * @param $groupDefs
+	 * @param Array $groupDefs
 	 *
 	 * @return ArtVandelay_ResultModel
 	 */
-	public function import($groupDefs)
+	public function import(Array $groupDefs)
 	{
 		$result = new ArtVandelay_ResultModel();
 
-		if($groupDefs === null) return $result;
+		if(empty($groupDefs))
+		{
+			// Ignore importing fields.
+			return $result;
+		}
 
 		$groups     = craft()->fields->getAllGroups('name');
 		$fields     = craft()->fields->getAllFields('handle');
 		$fieldTypes = craft()->fields->getAllFieldTypes();
-
-		if (!is_object($groupDefs))
-		{
-			return $result->error('`fields` must be an object');
-		}
 
 		foreach ($groupDefs as $groupName => $fieldDefs)
 		{
@@ -65,28 +64,24 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 				return $result->error($group->getAllErrors());
 			}
 
-			if (!is_object($fieldDefs))
-			{
-				return $result->error('`fields[handle]` must be an object');
-			}
-
 			foreach ($fieldDefs as $fieldHandle => $fieldDef)
 			{
-				if (array_key_exists($fieldDef->type, $fieldTypes))
+				if (array_key_exists($fieldDef['type'], $fieldTypes))
 				{
 					$field = array_key_exists($fieldHandle, $fields)
 						? $fields[$fieldHandle]
 						: new FieldModel();
 
-					$field->handle  = $fieldHandle;
-					$field->groupId = $group->id;
-
-					$field->name         = $fieldDef->name;
-					$field->context      = $fieldDef->context;
-					$field->instructions = $fieldDef->instructions;
-					$field->translatable = $fieldDef->translatable;
-					$field->type         = $fieldDef->type;
-					$field->settings     = (array) $fieldDef->settings;
+					$field->setAttributes(array(
+						'handle'       => $fieldHandle,
+						'groupId'      => $group->id,
+						'name'         => $fieldDef['name'],
+						'context'      => $fieldDef['context'],
+						'instructions' => $fieldDef['instructions'],
+						'translatable' => $fieldDef['translatable'],
+						'type'         => $fieldDef['type'],
+						'settings'     => $fieldDef['settings']
+					));
 
 					if (!craft()->fields->saveField($field))
 					{
