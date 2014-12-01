@@ -124,6 +124,12 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				'enableVersioning' => $sectionDef['enableVersioning']
 			));
 
+			if (!craft()->sections->saveSection($section))
+			{
+				return $result->error($section->getAllErrors());
+			}
+
+
 			if (!array_key_exists('locales', $sectionDef))
 			{
 				return $result->error('`sections[handle].locales` must be defined');
@@ -138,11 +144,20 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 					: new SectionLocaleModel();
 
 				$locale->setAttributes(array(
+					'sectionId'        => $section->id,
 					'locale'           => $localeId,
 					'enabledByDefault' => $localeDef['enabledByDefault'],
 					'urlFormat'        => $localeDef['urlFormat'],
 					'nestedUrlFormat'  => $localeDef['nestedUrlFormat']
 				));
+
+				// Todo: Is this a hack? I don't see another way.
+				// Todo: Might need a sorting order as well? It's NULL at the moment.
+				craft()->db->createCommand()->insertOrUpdate('locales', array(
+					'locale' => $locale->locale
+				), array());
+
+				$locales[$localeId] = $locale;
 			}
 
 			$section->setLocales($locales);
@@ -151,6 +166,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 			{
 				return $result->error($section->getAllErrors());
 			}
+
 
 			$entryTypes = $section->getEntryTypes('handle');
 
