@@ -124,11 +124,6 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				'enableVersioning' => $sectionDef['enableVersioning']
 			));
 
-			if (!craft()->sections->saveSection($section))
-			{
-				return $result->error($section->getAllErrors());
-			}
-
 
 			if (!array_key_exists('locales', $sectionDef))
 			{
@@ -144,7 +139,6 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 					: new SectionLocaleModel();
 
 				$locale->setAttributes(array(
-					'sectionId'        => $section->id,
 					'locale'           => $localeId,
 					'enabledByDefault' => $localeDef['enabledByDefault'],
 					'urlFormat'        => $localeDef['urlFormat'],
