@@ -23,11 +23,19 @@ class ArtVandelayController extends BaseController
 
 		if ($data !== null)
 		{
-			$fieldImportResult = craft()->artVandelay_fields->import($data->fields);
-			$sectionImportResult = craft()->artVandelay_sections->import($data->sections);
+			$assetImportResult    = craft()->artVandelay_assets->import($data->assets);
+			$categoryImportResult = craft()->artVandelay_categories->import($data->categories);
+			$fieldImportResult    = craft()->artVandelay_fields->import($data->fields);
+			$globalImportResult   = craft()->artVandelay_globals->import($data->globals);
+			$sectionImportResult  = craft()->artVandelay_sections->import($data->sections);
+			$tagImportResult      = craft()->artVandelay_tags->import($data->tags);
 
+			$result->consume($assetImportResult);
+			$result->consume($categoryImportResult);
 			$result->consume($fieldImportResult);
+			$result->consume($globalImportResult);
 			$result->consume($sectionImportResult);
+			$result->consume($tagImportResult);
 
 			if ($result->ok)
 			{
@@ -56,8 +64,12 @@ class ArtVandelayController extends BaseController
 		$this->requirePostRequest();
 
 		$result = new ArtVandelay_ExportedDataModel(array(
-			'fields' => $this->_exportFields(),
-			'sections' => $this->_exportSections()
+			'assets'     => $this->_exportAssets(),
+			'categories' => $this->_exportCategories(),
+			'fields'     => $this->_exportFields(),
+			'globals'    => $this->_exportGlobals(),
+			'sections'   => $this->_exportSections(),
+			'tags'       => $this->_exportTags()
 		));
 
 		$json = $result->toJson();
@@ -102,6 +114,18 @@ class ArtVandelayController extends BaseController
 	}
 
 
+	private function _exportAssets()
+	{
+		return array();
+	}
+
+
+	private function _exportCategories()
+	{
+		return array();
+	}
+
+
 	private function _exportFields()
 	{
 		$selectedIds = craft()->request->getParam('selectedGroups', '*');
@@ -124,6 +148,12 @@ class ArtVandelayController extends BaseController
 		}
 
 		return craft()->artVandelay_fields->export($groups);
+	}
+
+
+	private function _exportGlobals()
+	{
+		return array();
 	}
 
 
@@ -154,6 +184,12 @@ class ArtVandelayController extends BaseController
 		}
 
 		return craft()->artVandelay_sections->export($sections, $entryTypeIds);
+	}
+
+
+	private function _exportTags()
+	{
+		return array();
 	}
 
 }

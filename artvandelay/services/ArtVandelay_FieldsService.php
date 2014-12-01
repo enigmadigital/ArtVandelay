@@ -37,7 +37,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 	 *
 	 * @return ArtVandelay_ResultModel
 	 */
-	public function import(Array $groupDefs)
+	public function import($groupDefs)
 	{
 		$result = new ArtVandelay_ResultModel();
 

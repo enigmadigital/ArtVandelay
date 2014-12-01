@@ -50,12 +50,9 @@ class ArtVandelay_ResultModel extends BaseModel
 	 */
 	public function consume(ArtVandelay_ResultModel $result)
 	{
-		if($result->errors !== null)
+		if(count($result->errors) > 0)
 		{
-			foreach($result->errors as $error)
-			{
-				$this->error($error);
-			}
+			$this->error($result->errors);
 		}
 	}
 

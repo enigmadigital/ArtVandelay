@@ -26,31 +26,13 @@ class ArtVandelay_ExportedDataModel extends BaseModel
 	protected function defineAttributes()
 	{
 		return array(
-			'fields'   => AttributeType::Mixed,
-			'sections' => AttributeType::Mixed
+			'assets'     => AttributeType::Mixed,
+			'categories' => AttributeType::Mixed,
+			'fields'     => AttributeType::Mixed,
+			'globals'    => AttributeType::Mixed,
+			'sections'   => AttributeType::Mixed,
+			'tags'       => AttributeType::Mixed
 		);
-	}
-
-
-	/**
-	 * Returns the list of fields stores in this data.
-	 *
-	 * @return mixed
-	 */
-	public function getFields()
-	{
-		return $this->fields;
-	}
-
-
-	/**
-	 * Returns the list of sections stored in this data.
-	 *
-	 * @return mixed
-	 */
-	public function getSections()
-	{
-		return $this->sections;
 	}
 
 

@@ -95,7 +95,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 	 *
 	 * @return ArtVandelay_ResultModel
 	 */
-	public function import(Array $sectionDefs)
+	public function import($sectionDefs)
 	{
 		$result = new ArtVandelay_ResultModel();
 
