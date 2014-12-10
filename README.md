@@ -1,16 +1,12 @@
-# Art Vandelay
+# Art Vandelay 1.0.1
 
-Art Vandelay allows you to import and export content data from a [Craft](http://buildwithcraft.com) site.
+Art Vandelay allows you to import and export fields and sections to and from a [Craft](http://buildwithcraft.com) site.
 
-### Releases
+### Installing
 
-* [v1.0.1 - Current](https://github.com/xodigital/ArtVandelay/releases/tag/v1.0.1)
-	* Import and export [fields](http://buildwithcraft.com/docs/fields) and [sections](http://buildwithcraft.com/docs/sections-and-entries).
-
-### Installation
-
-* Download a release from above and drop the `artvandelay` folder into your `plugins` directory.
-* Log in to your Craft admin interface, navigate to plugins via settings and install Art Vandelay.
+1. Copy the `artvandelay` directory into your `craft/plugins` directory
+2. Browse to Settings > Plugins in the Craft CP
+3. Click on the Install button next to Art Vandelay
 
 ### Usage
 
@@ -18,6 +14,12 @@ Art Vandelay allows you to import and export content data from a [Craft](http://
 * To import data, paste previously exported JSON into the text field and click *Import*.
 * To export data, select the field groups you would like to export fields from, the sections you would like to export, then hit *Export*. The exported data will appear in a text field for you to copy.
 
+## Updates
+
+* 1.0.1
+	* Fix error when importing section translations.
+* 1.0.0
+	* Initial release!
 
 ### Todo
 
