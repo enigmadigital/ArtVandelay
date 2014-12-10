@@ -2,13 +2,13 @@
 
 Art Vandelay allows you to import and export fields and sections to and from a [Craft](http://buildwithcraft.com) site.
 
-### Installing
+## Installing
 
 1. Copy the `artvandelay` directory into your `craft/plugins` directory
 2. Browse to Settings > Plugins in the Craft CP
 3. Click on the Install button next to Art Vandelay
 
-### Usage
+## Usage
 
 * Navigate to your plugins in the admin interface and click the 'Art Vandelay' link on the left.
 * To import data, paste previously exported JSON into the text field and click *Import*.
@@ -21,7 +21,7 @@ Art Vandelay allows you to import and export fields and sections to and from a [
 * 1.0.0
 	* Initial release!
 
-### Todo
+## Todo
 
 * Allow importing and exporting for:
 	* Assets
