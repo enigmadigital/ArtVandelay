@@ -77,7 +77,6 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 		$groups     = craft()->fields->getAllGroups('name');
 		$fields     = craft()->fields->getAllFields('handle');
-		$fieldTypes = craft()->fields->getAllFieldTypes();
 
 		foreach ($groupDefs as $groupName => $fieldDefs)
 		{
@@ -94,81 +93,90 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 			foreach ($fieldDefs as $fieldHandle => $fieldDef)
 			{
-				if (array_key_exists($fieldDef['type'], $fieldTypes))
+				$field = array_key_exists($fieldHandle, $fields)
+					? $fields[$fieldHandle]
+					: new FieldModel();
+
+				$field->setAttributes(array(
+					'handle'       => $fieldHandle,
+					'groupId'      => $group->id,
+					'name'         => $fieldDef['name'],
+					'context'      => $fieldDef['context'],
+					'instructions' => $fieldDef['instructions'],
+					'translatable' => $fieldDef['translatable'],
+					'type'         => $fieldDef['type'],
+					'settings'     => $fieldDef['settings']
+				));
+
+				if (!$field->getFieldType())
 				{
-					$field = array_key_exists($fieldHandle, $fields)
-						? $fields[$fieldHandle]
-						: new FieldModel();
-
-					$field->setAttributes(array(
-						'handle'       => $fieldHandle,
-						'groupId'      => $group->id,
-						'name'         => $fieldDef['name'],
-						'context'      => $fieldDef['context'],
-						'instructions' => $fieldDef['instructions'],
-						'translatable' => $fieldDef['translatable'],
-						'type'         => $fieldDef['type'],
-						'settings'     => $fieldDef['settings']
-					));
-
-					if (!craft()->fields->saveField($field))
-					{
-						return $result->error($field->getAllErrors());
-					}
-
 					if ($field->type == 'Matrix')
 					{
-						$blockTypes = craft()->matrix->getBlockTypesByFieldId($field->id, 'handle');
+						return $result->error("One of the field's types does not exist. Are you missing a plugin?");
+					}
+					else
+					{
+						return $result->error("Field type '$field->type' does not exist. Are you missing a plugin?");
+					}
+				}
 
-						if (!array_key_exists('blockTypes', $fieldDef))
+				if (!craft()->fields->saveField($field))
+				{
+					return $result->error($field->getAllErrors());
+				}
+
+				if ($field->type == 'Matrix')
+				{
+					$blockTypes = craft()->matrix->getBlockTypesByFieldId($field->id, 'handle');
+
+					if (!array_key_exists('blockTypes', $fieldDef))
+					{
+						return $result->error('`fields[handle].blockTypes` must exist');
+					}
+
+					foreach ($fieldDef['blockTypes'] as $blockTypeHandle => $blockTypeDef)
+					{
+						$blockType = array_key_exists($blockTypeHandle, $blockTypes)
+							? $blockTypes[$blockTypeHandle]
+							: new MatrixBlockTypeModel();
+
+						$blockType->fieldId = $field->id;
+						$blockType->name    = $blockTypeDef['name'];
+						$blockType->handle  = $blockTypeHandle;
+
+						if (!array_key_exists('fields', $blockTypeDef))
 						{
-							return $result->error('`fields[handle].blockTypes` must exist');
+							return $result->error('`fields[handle].blockTypes[handle].fields` must exist');
 						}
 
-						foreach ($fieldDef['blockTypes'] as $blockTypeHandle => $blockTypeDef)
+						$blockTypeFields = array();
+						foreach ($blockType->getFields() as $blockTypeField)
 						{
-							$blockType = array_key_exists($blockTypeHandle, $blockTypes)
-								? $blockTypes[$blockTypeHandle]
-								: new MatrixBlockTypeModel();
+							$blockTypeFields[$blockTypeField->handle] = $blockTypeField;
+						}
 
-							$blockType->fieldId = $field->id;
-							$blockType->name    = $blockTypeDef['name'];
-							$blockType->handle  = $blockTypeHandle;
+						$newBlockTypeFields = array();
 
-							if (!array_key_exists('fields', $blockTypeDef))
-							{
-								return $result->error('`fields[handle].blockTypes[handle].fields` must exist');
-							}
+						foreach ($blockTypeDef['fields'] as $blockTypeFieldHandle => $blockTypeFieldDef)
+						{
+							$blockTypeField = array_key_exists($blockTypeFieldHandle, $blockTypeFields)
+								? $blockTypeFields[$blockTypeFieldHandle]
+								: new FieldModel();
 
-							$blockTypeFields = array();
-							foreach ($blockType->getFields() as $blockTypeField)
-							{
-								$blockTypeFields[$blockTypeField->handle] = $blockTypeField;
-							}
+							$blockTypeField->name         = $blockTypeFieldDef['name'];
+							$blockTypeField->handle       = $blockTypeFieldHandle;
+							$blockTypeField->required     = $blockTypeFieldDef['required'];
+							$blockTypeField->translatable = $blockTypeFieldDef['translatable'];
+							$blockTypeField->type         = $blockTypeFieldDef['type'];
 
-							$newBlockTypeFields = array();
+							$newBlockTypeFields[] = $blockTypeField;
+						}
 
-							foreach ($blockTypeDef['fields'] as $blockTypeFieldHandle => $blockTypeFieldDef)
-							{
-								$blockTypeField = array_key_exists($blockTypeFieldHandle, $blockTypeFields)
-									? $blockTypeFields[$blockTypeFieldHandle]
-									: new FieldModel();
+						$blockType->setFields($newBlockTypeFields);
 
-								$blockTypeField->name         = $blockTypeFieldDef['name'];
-								$blockTypeField->handle       = $blockTypeFieldHandle;
-								$blockTypeField->required     = $blockTypeFieldDef['required'];
-								$blockTypeField->translatable = $blockTypeFieldDef['translatable'];
-								$blockTypeField->type         = $blockTypeFieldDef['type'];
-
-								$newBlockTypeFields[] = $blockTypeField;
-							}
-
-							$blockType->setFields($newBlockTypeFields);
-
-							if (!craft()->matrix->saveBlockType($blockType))
-							{
-								return $result->error($blockType->getAllErrors());
-							}
+						if (!craft()->matrix->saveBlockType($blockType))
+						{
+							return $result->error($blockType->getAllErrors());
 						}
 					}
 				}
