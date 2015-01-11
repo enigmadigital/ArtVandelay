@@ -1,4 +1,4 @@
-# Art Vandelay 1.0.1
+# Art Vandelay 1.0.2
 
 Art Vandelay allows you to import and export fields and sections to and from a [Craft](http://buildwithcraft.com) site.
 
@@ -16,6 +16,8 @@ Art Vandelay allows you to import and export fields and sections to and from a [
 
 ## Updates
 
+* 1.0.2
+	* Include fields in an exported matrix.
 * 1.0.1
 	* Fix error when importing section translations.
 * 1.0.0
