@@ -1,12 +1,12 @@
 {
-    "name": "bluespore/artvandelay",
+    "name": "xodigital/artvandelay",
     "description": "Import and export fields and sections to and from a Craft site.",
     "authors": [
-		{
-			"name": "",
-			"email": ""
-		}
-	],
+        {
+            "name": "XO Digital",
+            "email": "hello@xodigital.com.au"
+        }
+    ],
     "type": "craft-plugin",
     "require": {
         "composer/installers": "~1.0"
