@@ -16,39 +16,15 @@ class ArtVandelayController extends BaseController
 	{
 		$this->requirePostRequest();
 
-		$json = craft()->request->getParam('data', '{}');
-		$data = ArtVandelay_ExportedDataModel::fromJson($json);
+        $json = craft()->request->getParam('data', '{}');
 
-		$result = new ArtVandelay_ResultModel();
+        $result = craft()->artVandelay_importExport->importFromJson($json);
 
-		if ($data !== null)
-		{
-			$assetImportResult    = craft()->artVandelay_assets->import($data->assets);
-			$categoryImportResult = craft()->artVandelay_categories->import($data->categories);
-			$fieldImportResult    = craft()->artVandelay_fields->import($data->fields);
-			$globalImportResult   = craft()->artVandelay_globals->import($data->globals);
-			$sectionImportResult  = craft()->artVandelay_sections->import($data->sections);
-			$tagImportResult      = craft()->artVandelay_tags->import($data->tags);
-
-			$result->consume($assetImportResult);
-			$result->consume($categoryImportResult);
-			$result->consume($fieldImportResult);
-			$result->consume($globalImportResult);
-			$result->consume($sectionImportResult);
-			$result->consume($tagImportResult);
-
-			if ($result->ok)
-			{
-				craft()->userSession->setNotice('All done.');
-				$this->redirectToPostedUrl();
-
-				return;
-			}
-		}
-		else
-		{
-			$errors[] = 'Invalid JSON.';
-		}
+        if ($result->ok) {
+            craft()->userSession->setNotice('All done.');
+            $this->redirectToPostedUrl();
+            return;
+        }
 
 		craft()->userSession->setError('Get *out*! ' . implode(', ', $result->errors));
 
@@ -191,5 +167,6 @@ class ArtVandelayController extends BaseController
 	{
 		return array();
 	}
+
 
 }
