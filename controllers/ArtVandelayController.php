@@ -16,15 +16,15 @@ class ArtVandelayController extends BaseController
 	{
 		$this->requirePostRequest();
 
-        $json = craft()->request->getParam('data', '{}');
+		$json = craft()->request->getParam('data', '{}');
 
-        $result = craft()->artVandelay_importExport->importFromJson($json);
+		$result = craft()->artVandelay_importExport->importFromJson($json);
 
-        if ($result->ok) {
-            craft()->userSession->setNotice('All done.');
-            $this->redirectToPostedUrl();
-            return;
-        }
+		if ($result->ok) {
+			craft()->userSession->setNotice('All done.');
+			$this->redirectToPostedUrl();
+			return;
+		}
 
 		craft()->userSession->setError('Get *out*! ' . implode(', ', $result->errors));
 
@@ -167,6 +167,5 @@ class ArtVandelayController extends BaseController
 	{
 		return array();
 	}
-
 
 }
