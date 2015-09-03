@@ -23,7 +23,8 @@
 
         <h2>Importer</h2>
 
-        {{ forms.textareaField({
+          {{ getCsrfInput() }}
+          {{ forms.textareaField({
           label: 'Data',
           instructions: 'Paste the JSON data to import.',
           name: 'data',
