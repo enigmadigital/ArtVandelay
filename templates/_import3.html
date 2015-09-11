@@ -1,0 +1,46 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Art Vandelay' %}
+
+
+{% set tabs = {
+export: { label: "Export"|t, url: url('artVandelay/export/fields') },
+import: { label: "Import"|t, url: url('artVandelay/import/1') },
+} %}
+
+{% set selectedTab = 'import' %}
+
+{% set crumbs = [
+{ label: "Settings"|t, url: url('settings') },
+{ label: "Plugins"|t, url: url('settings/plugins') },
+{ label: "Art Vandelay"|t, url: url('artVandelay') }
+] %}
+
+{% includeJsResource('artvandelay/js/default.js') %}
+{% includeCssResource('artvandelay/css/default.css') %}
+
+{% block content %}
+
+  {% import '_includes/forms' as forms %}
+
+  <div class="grid">
+
+    <div class="item">
+
+      <h2>All Done :)</h2>
+    </div>
+
+    <div class="item" data-colspan="1">
+
+      <img src="{{ resourceUrl('artvandelay/images/art-vandelay.jpg') }}"
+        class="fullwidth">
+
+      <p class="centeralign">
+        Image by <a href="https://www.flickr.com/photos/lucaohman/3473867313/">Luca Ohman</a>
+      </p>
+
+    </div>
+
+  </div>
+
+{% endblock %}

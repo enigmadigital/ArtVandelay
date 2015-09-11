@@ -1,0 +1,179 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Art Vandelay - Import Preview' %}
+
+
+{% set tabs = {
+export: { label: "Export"|t, url: url('artVandelay/export/fields') },
+import: { label: "Import"|t, url: url('artVandelay/import/1') },
+} %}
+
+{% set selectedTab = 'import' %}
+
+{% set crumbs = [
+{ label: "Settings"|t, url: url('settings') },
+{ label: "Plugins"|t, url: url('settings/plugins') },
+{ label: "Art Vandelay"|t, url: url('artVandelay') }
+] %}
+
+{% includeJsResource('artvandelay/js/default.js') %}
+{% includeCssResource('artvandelay/css/default.css') %}
+
+{% block content %}
+
+  {% import '_includes/forms' as forms %}
+
+  <div class="grid">
+
+    <div class="item">
+        {% if model.contenttabs | length %}
+        <form method="POST" id="step3Form" accept-charset="UTF-8">
+          <input type="hidden" name="action" value="artVandelay/importstep4">
+        {% else %}
+        <form method="POST" accept-charset="UTF-8">
+          <input type="hidden" name="action" value="artVandelay/importstep3">
+        {% endif %}
+
+        {% if model.fields | length %}
+          <h2>Fields to be imported</h2>
+          <table class="data fullwidth">
+            <thead>
+              <tr>
+                <th>Group/Field</th>
+                <th>Type</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for key, group in model.fields %}
+              <tr>
+                <th colspan="2">{{ key }}</th>
+                <td>{{ craft.ArtVandelay.FieldGroupStatus(key) | raw }}</td>
+              </tr>
+              {% for fkey, field in group %}
+                <tr>
+                  <td>&nbsp;&nbsp;&nbsp;{{ fkey }}</td>
+                  <td>{{  field.type }}</td>
+                  <td>{{ craft.ArtVandelay.FieldStatus(key, fkey, field.type) | raw }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+            </tbody>
+          </table>
+
+          <hr />
+        {% endif %}
+
+        {% if model.sections | length %}
+          <h2>Sections to be imported</h2>
+          <table class="data fullwidth">
+            <thead>
+              <tr>
+                <th>Section/Entry Type</th>
+                <th>Type</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for key, section in model.sections %}
+              <tr>
+                <th>{{ key }}</th>
+                <td>{{ section.type }}</td>
+                <td>{{ craft.ArtVandelay.SectionStatus(key, section.type) | raw }}</td>
+                </tr>
+                {% for ckey, contenttype in section.entryTypes %}
+                  <tr>
+                    <td>&nbsp;&nbsp;{{ ckey }}</td>
+                    <td>Entry Type</td>
+                    <td>{{ craft.ArtVandelay.EntryTypeStatus(key, ckey) | raw }}</td>
+                  </tr>
+                  {% for tkey, tab in contenttype.fieldLayout.tabs %}
+                    <tr>
+                      <td>&nbsp;&nbsp;&nbsp;&nbsp;{{ tkey }}</td>
+                      <td>Tab</td>
+                      <td>{{ craft.ArtVandelay.EntryTypeTabStatus(key, ckey, tkey) | raw }}</td>
+                    </tr>
+                    {% for fkey, field in tab %}
+                      <tr>
+                        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ fkey }}</td>
+                        <td>Field</td>
+                        <td>{{ craft.ArtVandelay.TabFieldStatus(key, ckey, tkey, fkey) | raw }}</td>
+                      </tr>
+                    {% endfor %}
+                  {% endfor %}
+                {% endfor %}
+            {% endfor %}
+            </tbody>
+          </table>
+
+          <hr />
+        {% endif %}
+
+        {% if model.contenttabs | length %}
+          {% for key, fields in model.contenttabs %}
+          <h2>Tab to be imported - {{ key }}</h2>
+          <table id="tabTable" class="data fullwidth">
+            <thead>
+              <tr>
+                <th colspan="2">Section / Entry Type</th>
+                <th>Already has tab?</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for itm in craft.ArtVandelay.EntryTypes %}
+                {% set secent = itm | split('||') %}
+                {% set canImport = true %}
+                {% set notes = '' %}
+                {% for key, group in model.fields %}
+                  {% for fkey, field in group %}
+                    {% set tabname = craft.ArtVandelay.WhatTabIsFieldIn(secent[0], secent[1], fkey) %}
+                    {% if tabname != key and tabname | length %}
+                      {% set notes = notes ~ '<li>Entry type has field ' ~ fkey ~ ' in different tab - ' ~ tabname ~ '.</li>' %}
+                      {% set canImport = false %}
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+                {% if notes | length %}
+                  {% set notes = "<ul class='exists'>" ~ notes ~ "</ul>" %}
+                {% endif %}
+                <tr>
+                  <td class="thin">
+                    {% if canImport %}
+                      <input type="checkbox" class="sectionTabs" value="{{ itm }}" />
+                    {%  endif %}
+                  </td>
+                  <td>
+                    {% if secent[0] == secent[1] %}
+                      {{ secent[0] }}
+                    {% else %}
+                      {{ secent[0] }} - {{ secent[1] }}
+                    {%  endif %}
+                  </td>
+                  <td>{{ craft.ArtVandelay.EntryTypeHasTab(secent[0], secent[1], key) ? 'Yes' : 'No'}}</td>
+                  <td>{{ notes | raw }}</td>
+                </tr>
+              {% endfor %}
+
+            </tbody>
+          </table>
+          {% endfor %}
+
+            <hr />
+        {% endif %}
+
+
+
+        <input type="hidden" name="data" id="importData" value='{{ rawdata|replace({"\n":'', "\r":''}) }}' />
+        <input type="hidden" name="applyTo" id="applyTo" value='' />
+
+        <div class="buttons">
+          <input type="submit" class="btn submit" id="step3Submit" value="Import" />
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+{% endblock %}

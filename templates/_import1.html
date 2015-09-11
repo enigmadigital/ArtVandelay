@@ -1,0 +1,67 @@
+{% extends '_layouts/cp' %}
+
+{% set title = 'Art Vandelay' %}
+
+
+{% set tabs = {
+export: { label: "Export"|t, url: url('artVandelay/export/fields') },
+import: { label: "Import"|t, url: url('artVandelay/import/1') },
+} %}
+
+{% set selectedTab = 'import' %}
+
+{% set crumbs = [
+{ label: "Settings"|t, url: url('settings') },
+{ label: "Plugins"|t, url: url('settings/plugins') },
+{ label: "Art Vandelay"|t, url: url('artVandelay') }
+] %}
+
+{% includeJsResource('artvandelay/js/default.js') %}
+{% includeCssResource('artvandelay/css/default.css') %}
+
+{% block content %}
+
+  {% import '_includes/forms' as forms %}
+
+  <div class="grid">
+
+    <div class="item">
+
+      <form method="POST" accept-charset="UTF-8" data-saveshortcut>
+
+        <input type="hidden" name="action" value="artVandelay/importstep2">
+
+        <h2>Importer</h2>
+
+          {{ getCsrfInput() }}
+          {{ forms.textareaField({
+          label: 'Data',
+          instructions: 'Paste the JSON data to import.',
+          name: 'data',
+          required: true,
+          class: 'code',
+          rows: 10,
+        }) }}
+
+        <div class="buttons">
+          <input type="submit" class="btn submit" value="Import" />
+        </div>
+
+      </form>
+
+    </div>
+
+    <div class="item" data-colspan="1">
+
+      <img src="{{ resourceUrl('artvandelay/images/art-vandelay.jpg') }}"
+        class="fullwidth">
+
+      <p class="centeralign">
+        Image by <a href="https://www.flickr.com/photos/lucaohman/3473867313/">Luca Ohman</a>
+      </p>
+
+    </div>
+
+  </div>
+
+{% endblock %}

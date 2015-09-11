@@ -1,6 +1,22 @@
-# Art Vandelay 1.0.3
+# Art Vandelay 2.0.0a
 
-Art Vandelay allows you to import and export fields and sections to and from a [Craft](http://buildwithcraft.com) site.
+Art Vandelay allows you to import and export fields and section and tabs to and from a [Craft](http://buildwithcraft.com) site.
+
+#What's in version 2?
+
+This is the alpha release of version 2.
+
+In version 2 we upgraded the interface so it is no longer a single page. There are now 3 types of export you can do:
+
+1. Export Field Groups - export an entire group of fields
+2. Export Section - note version 2 automatically exports the fields that belong to a section.
+3. Export a Tab - You can export a single entry Type tab, the fields that belong to that tab are also exported.
+
+The import now has a couple of steps:
+
+1. Paste your export file into the textbox
+2. You are presented with a report page indicating what the import will do and potential issues. eg. if a field type has changed.
+3. For tab imports you can select which entry types you want to add the tab to
 
 ## Installing
 
@@ -16,6 +32,8 @@ Art Vandelay allows you to import and export fields and sections to and from a [
 
 ## Updates
 
+* 2.0.0a
+  * Redo interface, add tab exporting / importing
 * 1.0.3
   * Add CLI support @Athoaionline
 * 1.0.2

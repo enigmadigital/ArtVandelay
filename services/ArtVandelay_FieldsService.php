@@ -3,6 +3,33 @@
 class ArtVandelay_FieldsService extends BaseApplicationComponent
 {
 
+	public function exportSectionFields($sections, $allowedEntryTypeIds)
+	{
+		$fieldNames = array();
+
+		foreach ($sections as $section) {
+			$entryTypeDefs = array();
+
+			foreach ($section->getEntryTypes() as $entryType) {
+				if ($allowedEntryTypeIds === null || in_array($entryType->id, $allowedEntryTypeIds)) {
+					foreach ($this->_exportFieldLayout($entryType->getFieldLayout()) as $contenttype) {
+
+						foreach ($contenttype as $key => $value) {
+							$entryTypeDefs[$key] = $value;
+							foreach ($value as $fieldkey => $fieldvalue) {
+								$fieldNames[] = $fieldkey;
+							}
+						}
+					}
+				}
+			}
+
+		}
+
+
+		return $this->exportFieldNames($fieldNames);
+	}
+
 	public function export(array $groups)
 	{
 		$groupDefs = array();
@@ -55,6 +82,112 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 		}
 
 		return $groupDefs;
+	}
+
+	public function exportTabFields($section, $entryType, $tabName)
+	{
+
+		//get list of fieldnames in selected
+		$fieldnames = array();
+		foreach ($this->_exportFieldLayout($entryType->getFieldLayout()) as $contenttype) {
+			foreach ($contenttype as $key => $value) {
+				if ($key == $tabName) {
+					$entryTypeDefs[$key] = $value;
+					foreach ($value as $fieldkey => $fieldvalue) {
+						$fieldnames[] = $fieldkey;
+					}
+				}
+			}
+		}
+
+		return $this->exportFieldNames($fieldnames);
+	}
+
+	public function exportFieldNames($fieldnames)
+	{
+		$groupDefs = array();
+
+		$groups = craft()->fields->getAllGroups();
+
+		foreach ($groups as $group) {
+			$fieldDefs = array();
+			foreach ($group->getFields() as $field) {
+				if (in_array($field->handle, $fieldnames)) {
+					$fieldDefs[$field->handle] = array(
+						'name' => $field->name,
+						'context' => $field->context,
+						'instructions' => $field->instructions,
+						'translatable' => $field->translatable,
+						'type' => $field->type,
+						'settings' => $field->settings
+					);
+
+					if ($field->type == 'Matrix') {
+						$blockTypeDefs = array();
+
+						$blockTypes = craft()->matrix->getBlockTypesByFieldId($field->id);
+						foreach ($blockTypes as $blockType) {
+							$blockTypeFieldDefs = array();
+
+							foreach ($blockType->getFields() as $blockTypeField) {
+								$blockTypeFieldDefs[$blockTypeField->handle] = array(
+									'name' => $blockTypeField->name,
+									'required' => $blockTypeField->required,
+									'translatable' => $blockTypeField->translatable,
+									'type' => $blockTypeField->type
+								);
+							}
+
+							$blockTypeDefs[$blockType->handle] = array(
+								'name' => $blockType->name,
+								'fields' => $blockTypeFieldDefs
+							);
+						}
+
+						$fieldDefs[$field->handle]['blockTypes'] = $blockTypeDefs;
+					}
+				}
+			}
+			if (sizeOf($fieldDefs) > 0) {
+				$groupDefs[$group->name] = $fieldDefs;
+			}
+		}
+		return $groupDefs;
+	}
+
+	private function _exportFieldLayout(FieldLayoutModel $fieldLayout)
+	{
+		if ($fieldLayout->getTabs())
+		{
+			$tabDefs = array();
+
+			foreach ($fieldLayout->getTabs() as $tab)
+			{
+				$tabDefs[$tab->name] = array();
+
+				foreach ($tab->getFields() as $field)
+				{
+					$tabDefs[$tab->name][$field->getField()->handle] = $field->required;
+				}
+			}
+
+			return array(
+				'tabs' => $tabDefs
+			);
+		}
+		else
+		{
+			$fieldDefs = array();
+
+			foreach ($fieldLayout->getFields() as $field)
+			{
+				$fieldDefs[$field->getField()->handle] = $field->required;
+			}
+
+			return array(
+				'fields' => $fieldDefs
+			);
+		}
 	}
 
 

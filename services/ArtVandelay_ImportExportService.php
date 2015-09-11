@@ -14,6 +14,26 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 		return $this->importFromExportedDataModel($exportedDataModel);
 	}
 
+	public function importTabsFromJson($json, $applyTo)
+	{
+		$exportedDataModel = ArtVandelay_ExportedDataModel::fromJson($json);
+		$applyToModel = json_decode($applyTo, false);
+		return $this->importTabsFromExportedDataModel($exportedDataModel, $applyToModel);
+	}
+
+	public function loadFromJson($json)
+	{
+		$data = ArtVandelay_ExportedDataModel::fromJson($json);
+
+		foreach ($data->fields as $group)
+		{
+			$group['notes'] = "HEY";
+		}
+
+		return $data;
+	}
+
+
 	/**
 	 * @param $array
 	 * @return ArtVandelay_ResultModel
@@ -28,6 +48,19 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 	 * @param $model
 	 * @return ArtVandelay_ResultModel
 	 */
+	private function importTabsFromExportedDataModel($model, $applyTo)
+	{
+		$result = new ArtVandelay_ResultModel();
+
+		if ($model !== null) {
+			$contentTabsImportResult = craft()->artVandelay_contentTabs->import($model->contenttabs, $applyTo);
+
+			//$result->consume($contentTabsImportResult);
+		}
+
+		return $result;
+	}
+
 	private function importFromExportedDataModel($model)
 	{
 		$result = new ArtVandelay_ResultModel();

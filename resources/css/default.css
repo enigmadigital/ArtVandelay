@@ -1,0 +1,30 @@
+@charset "utf-8";
+
+label .esection
+{
+    width: 150px;
+    display: inline-block;
+}
+
+label .contenttype
+{
+    width: 150px;
+    display: inline-block;
+}
+
+label .contenttab
+{
+    width: 150px;
+    display: inline-block;
+    font-weight: bold;
+}
+
+.exists
+{
+    color: darkgoldenrod;
+}
+
+.new
+{
+    color: darkgreen;
+}
