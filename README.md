@@ -29,6 +29,16 @@ The import now has a couple of steps:
 * Navigate to your plugins in the admin interface and click the 'Art Vandelay' link on the left.
 * To import data, paste previously exported JSON into the text field and click *Import*.
 * To export data, select the field groups you would like to export fields from, the sections you would like to export, then hit *Export*. The exported data will appear in a text field for you to copy.
+ 
+## Command Line
+
+Make sure you have your latest export stored at `./craft/config/schema.json`.
+
+Then just run to import...
+
+```
+php ./craft/app/etc/console/yiic artvandelay
+```
 
 ## Updates
 
