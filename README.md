@@ -40,12 +40,14 @@ Then just run to import...
 php ./craft/app/etc/console/yiic artvandelay
 ```
 
+For composer-managed projects, check out [craft-console plugin](https://github.com/evolution7/craft-console) for a CLI runner with composer support.
+
 ## Updates
 
 * 2.0.0a
   * Redo interface, add tab exporting / importing
 * 1.0.3
-  * Add CLI support @Athoaionline
+  * Add CLI support @thoaionline
 * 1.0.2
 	* Include fields in an exported matrix.
 * 1.0.1
