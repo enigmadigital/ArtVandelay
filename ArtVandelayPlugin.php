@@ -10,7 +10,7 @@ class ArtVandelayPlugin extends BasePlugin
 
 	public function getVersion()
 	{
-		return '1.0.2';
+		return '2.0.0a';
 	}
 
 	public function getDeveloper()
