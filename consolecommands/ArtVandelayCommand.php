@@ -24,4 +24,22 @@ class ArtVandelayCommand extends BaseCommand
 			print_r($result->errors);
 		}
 	}
+
+	/**
+	 * Exports the datamodel of craft (fields and sections)
+	 * @param string $file file to write the schema to
+	 */
+	public function actionExport($file = 'craft/config/schema.json')
+	{
+
+		$fieldGroups = craft()->fields->getAllGroups();
+		$sections = craft()->sections->getAllSections();
+
+		$schema = array(
+			'fields' => craft()->artVandelay_fields->export($fieldGroups),
+			'sections' => craft()->artVandelay_sections->export($sections),
+		);
+
+		file_put_contents($file, json_encode($schema, JSON_PRETTY_PRINT, JSON_NUMERIC_CHECK));
+	}
 }

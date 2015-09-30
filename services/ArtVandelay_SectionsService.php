@@ -4,7 +4,12 @@ namespace Craft;
 class ArtVandelay_SectionsService extends BaseApplicationComponent
 {
 
-	public function export(array $sections, $allowedEntryTypeIds)
+	/**
+	 * @param SectionModel[] $sections
+	 * @param null $allowedEntryTypeIds
+	 * @return array
+	 */
+	public function export(array $sections, $allowedEntryTypeIds = null)
 	{
 		$sectionDefs = array();
 
