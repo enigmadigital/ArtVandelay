@@ -40,14 +40,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 			foreach ($group->getFields() as $field)
 			{
-				$fieldDefs[$field->handle] = array(
-					'name'         => $field->name,
-					'context'      => $field->context,
-					'instructions' => $field->instructions,
-					'translatable' => $field->translatable,
-					'type'         => $field->type,
-					'settings'     => $field->settings
-				);
+				$fieldDefs[$field->handle] = $this->getFieldDefinition($field);
 
 				if ($field->type == 'Matrix')
 				{
@@ -60,12 +53,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 						foreach ($blockType->getFields() as $blockTypeField)
 						{
-							$blockTypeFieldDefs[$blockTypeField->handle] = array(
-								'name'         => $blockTypeField->name,
-								'required'     => $blockTypeField->required,
-								'translatable' => $blockTypeField->translatable,
-								'type'         => $blockTypeField->type
-							);
+							$blockTypeFieldDefs[$blockTypeField->handle] = $this->getFieldDefinition($blockTypeField, false);
 						}
 
 						$blockTypeDefs[$blockType->handle] = array(
@@ -83,6 +71,28 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 		return $groupDefs;
 	}
+
+    /**
+     * @param FieldModel $field
+     * @return array
+     */
+    private function getFieldDefinition(FieldModel $field, $includeContext = true)
+    {
+        $definition =  array(
+            'name'         => $field->name,
+			'required'     => $field->required,
+            'instructions' => $field->instructions,
+            'translatable' => $field->translatable,
+            'type'         => $field->type,
+            'settings'     => $field->settings
+        );
+
+		if($includeContext){
+			$definition['context'] = $field->context;
+		}
+
+		return $definition;
+    }
 
 	public function exportTabFields($section, $entryType, $tabName)
 	{
@@ -253,11 +263,6 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 					}
 				}
 
-				if (!craft()->fields->saveField($field))
-				{
-					return $result->error($field->getAllErrors());
-				}
-
 				if ($field->type == 'Matrix')
 				{
 					$blockTypes = craft()->matrix->getBlockTypesByFieldId($field->id, 'handle');
@@ -301,17 +306,22 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 							$blockTypeField->required     = $blockTypeFieldDef['required'];
 							$blockTypeField->translatable = $blockTypeFieldDef['translatable'];
 							$blockTypeField->type         = $blockTypeFieldDef['type'];
+							$blockTypeField->settings     = $blockTypeFieldDef['settings'];
 
 							$newBlockTypeFields[] = $blockTypeField;
 						}
 
 						$blockType->setFields($newBlockTypeFields);
 
-						if (!craft()->matrix->saveBlockType($blockType))
-						{
-							return $result->error($blockType->getAllErrors());
-						}
+						$blockTypes[$blockTypeHandle] = $blockType;
 					}
+					$field->settings = $field->getFieldType()->getSettings();
+					$field->settings->setBlockTypes($blockTypes);
+
+				}
+				if (!craft()->fields->saveField($field))
+				{
+					return $result->error($field->getAllErrors());
 				}
 			}
 		}
