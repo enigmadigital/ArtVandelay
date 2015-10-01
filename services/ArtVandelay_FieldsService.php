@@ -53,7 +53,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 						foreach ($blockType->getFields() as $blockTypeField)
 						{
-							$blockTypeFieldDefs[$blockTypeField->handle] = $this->getFieldDefinition($blockTypeField);
+							$blockTypeFieldDefs[$blockTypeField->handle] = $this->getFieldDefinition($blockTypeField, false);
 						}
 
 						$blockTypeDefs[$blockType->handle] = array(
@@ -76,17 +76,22 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
      * @param FieldModel $field
      * @return array
      */
-    private function getFieldDefinition(FieldModel $field)
+    private function getFieldDefinition(FieldModel $field, $includeContext = true)
     {
-        return array(
+        $definition =  array(
             'name'         => $field->name,
-            'context'      => $field->context,
 			'required'     => $field->required,
             'instructions' => $field->instructions,
             'translatable' => $field->translatable,
             'type'         => $field->type,
             'settings'     => $field->settings
         );
+
+		if($includeContext){
+			$definition['context'] = $field->context;
+		}
+
+		return $definition;
     }
 
 	public function exportTabFields($section, $entryType, $tabName)
@@ -258,11 +263,6 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 					}
 				}
 
-				if (!craft()->fields->saveField($field))
-				{
-					return $result->error($field->getAllErrors());
-				}
-
 				if ($field->type == 'Matrix')
 				{
 					$blockTypes = craft()->matrix->getBlockTypesByFieldId($field->id, 'handle');
@@ -313,11 +313,15 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 
 						$blockType->setFields($newBlockTypeFields);
 
-						if (!craft()->matrix->saveBlockType($blockType))
-						{
-							return $result->error($blockType->getAllErrors());
-						}
+						$blockTypes[$blockTypeHandle] = $blockType;
 					}
+					$field->settings = $field->getFieldType()->getSettings();
+					$field->settings->setBlockTypes($blockTypes);
+
+				}
+				if (!craft()->fields->saveField($field))
+				{
+					return $result->error($field->getAllErrors());
 				}
 			}
 		}
