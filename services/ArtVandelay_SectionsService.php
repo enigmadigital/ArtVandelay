@@ -161,7 +161,8 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 			$section->setLocales($locales);
 
-			if (!craft()->sections->saveSection($section))
+			// Create initial section record
+			if (!$this->saveSection($section))
 			{
 				return $result->error($section->getAllErrors());
 			}
@@ -206,9 +207,40 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 					return $result->error('Failed to import field layout.');
 				}
 			}
+
+			// Save section via craft after entrytypes have been created
+			if (!craft()->sections->saveSection($section))
+			{
+				return $result->error($section->getAllErrors());
+			}
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Save the section manually if it is new to prevent craft from creating the default entry type
+	 * @param SectionModel $section
+	 * @return mixed
+	 */
+	private function saveSection(SectionModel $section)
+	{
+		if (!$section->id){
+			$sectionRecord = new SectionRecord();
+
+			// Shared attributes
+			$sectionRecord->name             = $section->name;
+			$sectionRecord->handle           = $section->handle;
+			$sectionRecord->type             = $section->type;
+			$sectionRecord->enableVersioning = $section->enableVersioning;
+
+			if(!$sectionRecord->save()){
+				$section->addErrors($sectionRecord->getErrors());
+				return false;
+			};
+			$section->id = $sectionRecord->id;
+		}
+		return true;
 	}
 
 
