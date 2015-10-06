@@ -42,6 +42,17 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 			{
 				$fieldDefs[$field->handle] = $this->getFieldDefinition($field);
 
+				if($field->type == 'Entries')
+				{
+					$sources = $fieldDefs[$field->handle]['settings']['sources'];
+					$handleSources = [];
+					foreach($sources as $source){
+						$sectionId = explode(':', $source)[1];
+						$handleSources[] = craft()->sections->getSectionById($sectionId)->handle;
+					}
+					$fieldDefs[$field->handle]['settings']['sources'] = $handleSources;
+				}
+
 				if ($field->type == 'Matrix')
 				{
 					$blockTypeDefs = array();
@@ -211,6 +222,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 	public function import($groupDefs)
 	{
 		$result = new ArtVandelay_ResultModel();
+		$sections = craft()->sections->getAllSections('handle');
 
 		if(empty($groupDefs))
 		{
@@ -261,6 +273,20 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 					{
 						return $result->error("Field type '$field->type' does not exist. Are you missing a plugin?");
 					}
+				}
+
+				if($field->type == 'Entries')
+				{
+					$settings = $fieldDef['settings'];
+					$sources = [];
+					foreach($settings['sources'] as $sourceHandle)
+					{
+						if(array_key_exists($sourceHandle, $sections)) {
+							$sources[] = 'section:' . $sections[$sourceHandle]->id;
+						}
+					}
+					$settings['sources'] = $sources;
+					$field->settings = $settings;
 				}
 
 				if ($field->type == 'Matrix')
