@@ -225,7 +225,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 	 */
 	private function saveSection(SectionModel $section)
 	{
-		if (!$section->id){
+		if ($section->type != 'single' && !$section->id){
 			$sectionRecord = new SectionRecord();
 
 			// Shared attributes
@@ -239,8 +239,9 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 				return false;
 			};
 			$section->id = $sectionRecord->id;
+			return true;
 		}
-		return true;
+		return craft()->sections->saveSection($section);
 	}
 
 
