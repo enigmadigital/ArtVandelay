@@ -37,7 +37,13 @@ Make sure you have your latest export stored at `./craft/config/schema.json`.
 Then just run to import...
 
 ```
-php ./craft/app/etc/console/yiic artvandelay
+php ./craft/app/etc/console/yiic artvandelay import
+```
+
+You can also generate a schema.json with
+
+```
+php ./craft/app/etc/console/yiic artvandelay export
 ```
 
 For composer-managed projects, check out [craft-console plugin](https://github.com/evolution7/craft-console) for a CLI runner with composer support.
