@@ -247,86 +247,63 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
 	/**
 	 * Attempt to import a field layout.
-	 *
 	 * @param array $fieldLayoutDef
-	 *
 	 * @return FieldLayoutModel
 	 */
 	private function _importFieldLayout(Array $fieldLayoutDef)
 	{
-		$layoutTabs   = array();
 		$layoutFields = array();
+		$requiredFields = array();
 
 		if (array_key_exists('tabs', $fieldLayoutDef))
 		{
-			$tabSortOrder = 0;
 
 			foreach ($fieldLayoutDef['tabs'] as $tabName => $tabDef)
 			{
-				$layoutTabFields = array();
-
-				foreach ($tabDef as $fieldHandle => $required)
-				{
-					$fieldSortOrder = 0;
-
-					$field = craft()->fields->getFieldByHandle($fieldHandle);
-
-					if ($field)
-					{
-						$layoutField = new FieldLayoutFieldModel();
-
-						$layoutField->setAttributes(array(
-							'fieldId'   => $field->id,
-							'required'  => $required,
-							'sortOrder' => ++$fieldSortOrder
-						));
-
-						$layoutTabFields[] = $layoutField;
-						$layoutFields[] = $layoutField;
-					}
-				}
-
-				$layoutTab = new FieldLayoutTabModel();
-
-				$layoutTab->setAttributes(array(
-					'name' => $tabName,
-					'sortOrder' => ++$tabSortOrder
-				));
-
-				$layoutTab->setFields($layoutTabFields);
-
-				$layoutTabs[] = $layoutTab;
+				$layoutTabFields = $this->getPrepareFieldLayout($tabDef);
+				$requiredFields = array_merge($requiredFields, $layoutTabFields['required']);
+				$layoutFields[$tabName] = $layoutTabFields['fields'];
 			}
 		}
-
-		else if (array_key_exists('fields', $fieldLayoutDef))
+		elseif (array_key_exists('fields', $fieldLayoutDef))
 		{
-			$fieldSortOrder = 0;
-
-			foreach ($fieldLayoutDef['fields'] as $fieldHandle => $required)
-			{
-				$field = craft()->fields->getFieldByHandle($fieldHandle);
-
-				if ($field)
-				{
-					$layoutField = new FieldLayoutFieldModel();
-
-					$layoutField->setAttributes(array(
-						'fieldId'   => $field->id,
-						'required'  => $required,
-						'sortOrder' => ++$fieldSortOrder
-					));
-
-					$layoutFields[] = $layoutField;
-				}
-			}
+			$layoutTabFields = $this->getPrepareFieldLayout($fieldLayoutDef);
+			$requiredFields = $layoutTabFields['required'];
+			$layoutFields = $layoutTabFields['fields'];
 		}
 
-		$fieldLayout = new FieldLayoutModel();
+		$fieldLayout = craft()->fields->assembleLayout($layoutFields, $requiredFields);
 		$fieldLayout->type = ElementType::Entry;
-		$fieldLayout->setTabs($layoutTabs);
-		$fieldLayout->setFields($layoutFields);
 
 		return $fieldLayout;
+	}
+
+	/**
+	 * Get a prepared fieldLayout for the craft assembleLayout function
+	 * @param array $fieldLayoutDef
+	 * @return array
+	 */
+	private function getPrepareFieldLayout(array $fieldLayoutDef)
+	{
+		$layoutFields = array();
+		$requiredFields = array();
+
+		foreach ($fieldLayoutDef as $fieldHandle => $required)
+		{
+			$field = craft()->fields->getFieldByHandle($fieldHandle);
+
+			if ($field instanceof FieldModel) {
+				$layoutFields[] = $field->id;
+
+				if($required){
+					$requiredFields[] = $field->id;
+				}
+			}
+		}
+
+		return array(
+			'fields' => $layoutFields,
+			'required' => $requiredFields
+		);
 	}
 }
