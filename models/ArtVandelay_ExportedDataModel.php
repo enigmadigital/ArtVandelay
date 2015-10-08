@@ -23,6 +23,9 @@ class ArtVandelay_ExportedDataModel extends BaseModel
 	}
 
 
+	/**
+	 * @inheritdoc
+	 */
 	protected function defineAttributes()
 	{
 		return array(
@@ -30,8 +33,9 @@ class ArtVandelay_ExportedDataModel extends BaseModel
 			'categories' 		=> AttributeType::Mixed,
 			'fields'     		=> AttributeType::Mixed,
 			'globals'    		=> AttributeType::Mixed,
+			'plugins'			=> AttributeType::Mixed,
 			'sections'   		=> AttributeType::Mixed,
-			'contenttabs'   => AttributeType::Mixed,
+			'contenttabs'   	=> AttributeType::Mixed,
 			'tags'       		=> AttributeType::Mixed
 		);
 	}

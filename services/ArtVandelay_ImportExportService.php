@@ -61,11 +61,16 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 		return $result;
 	}
 
-	private function importFromExportedDataModel($model)
+	/**
+	 * @param ArtVandelay_ExportedDataModel $model
+	 * @return ArtVandelay_ResultModel
+	 */
+	private function importFromExportedDataModel(ArtVandelay_ExportedDataModel $model)
 	{
 		$result = new ArtVandelay_ResultModel();
 
 		if ($model !== null) {
+			$pluginImportResult = craft()->artVandelay_plugins->import($model->plugins);
 			$assetImportResult = craft()->artVandelay_assets->import($model->assets);
 			$categoryImportResult = craft()->artVandelay_categories->import($model->categories);
 			$fieldImportResult = craft()->artVandelay_fields->import($model->fields);
@@ -73,6 +78,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			$sectionImportResult = craft()->artVandelay_sections->import($model->sections);
 			$tagImportResult = craft()->artVandelay_tags->import($model->tags);
 
+			$result->consume($pluginImportResult);
 			$result->consume($assetImportResult);
 			$result->consume($categoryImportResult);
 			$result->consume($fieldImportResult);
@@ -82,5 +88,21 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 		}
 
 		return $result;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function export()
+	{
+		$fieldGroups = craft()->fields->getAllGroups();
+		$sections = craft()->sections->getAllSections();
+
+		return array(
+			'assets' => craft()->artVandelay_assets->export(),
+			'fields' => craft()->artVandelay_fields->export($fieldGroups),
+			'plugins' => craft()->artVandelay_plugins->export(),
+			'sections' => craft()->artVandelay_sections->export($sections),
+		);
 	}
 }

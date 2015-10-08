@@ -31,14 +31,7 @@ class ArtVandelayCommand extends BaseCommand
 	 */
 	public function actionExport($file = 'craft/config/schema.json')
 	{
-		$fieldGroups = craft()->fields->getAllGroups();
-		$sections = craft()->sections->getAllSections();
-
-		$schema = array(
-			'assets' => craft()->artVandelay_assets->export(),
-			'fields' => craft()->artVandelay_fields->export($fieldGroups),
-			'sections' => craft()->artVandelay_sections->export($sections),
-		);
+		$schema = craft()->artVandelay_importExport->export();
 
 		file_put_contents($file, json_encode($schema, JSON_PRETTY_PRINT, JSON_NUMERIC_CHECK));
 	}
