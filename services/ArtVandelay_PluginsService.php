@@ -15,17 +15,21 @@ class ArtVandelay_PluginsService extends BaseApplicationComponent
     public function import(array $pluginDefinitions)
     {
         $result = new ArtVandelay_ResultModel();
-        foreach($pluginDefinitions as $handle => $pluginDefinition){
+        foreach ($pluginDefinitions as $handle => $pluginDefinition) {
             $plugin = craft()->plugins->getPlugin($handle, false);
 
-            if(!$plugin) {
+            if (!$plugin) {
                 return $result->error("Plugin $handle could not be found, make sure it's files are located in the plugins folder");
             }
 
-            if($pluginDefinition['isInstalled']){
-                craft()->plugins->installPlugin($handle);
+            if ($pluginDefinition['isInstalled']) {
+                try {
+                    craft()->plugins->installPlugin($handle);
+                } catch (\Exception $e) {
+                    echo "An error occurred while installing plugin $handle, continuing anyway" . PHP_EOL;
+                }
 
-                if($pluginDefinition['isEnabled']){
+                if ($pluginDefinition['isEnabled']) {
                     craft()->plugins->enablePlugin($handle);
                 } else {
                     craft()->plugins->disablePlugin($handle);
@@ -48,7 +52,7 @@ class ArtVandelay_PluginsService extends BaseApplicationComponent
         $plugins = craft()->plugins->getPlugins(false);
         $pluginDefinitions = array();
 
-        foreach($plugins as $handle => $plugin){
+        foreach ($plugins as $handle => $plugin) {
             $pluginDefinitions[$handle] = $this->getPluginDefinition($plugin);
         }
 
