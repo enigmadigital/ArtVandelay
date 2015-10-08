@@ -103,42 +103,8 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
             'hasTitleField' => $entryType->hasTitleField,
             'titleLabel' => $entryType->titleLabel,
             'titleFormat' => $entryType->titleFormat,
-            'fieldLayout' => $this->getFieldLayoutDefinition($entryType->getFieldLayout())
+            'fieldLayout' => craft()->artVandelay_fields->getFieldLayoutDefinition($entryType->getFieldLayout())
         );
-    }
-
-    /**
-     * @param FieldLayoutModel $fieldLayout
-     * @return array
-     */
-    private function getFieldLayoutDefinition(FieldLayoutModel $fieldLayout)
-    {
-        if ($fieldLayout->getTabs()) {
-            $tabDefinitions = array();
-
-            foreach ($fieldLayout->getTabs() as $tab) {
-                $tabDefinitions[$tab->name] = $this->getFieldLayoutFieldsDefinition($tab->getFields());
-            }
-
-            return array('tabs' => $tabDefinitions);
-        }
-
-        return array('fields' => $this->getFieldLayoutFieldsDefinition($fieldLayout->getFields()));
-    }
-
-    /**
-     * @param FieldLayoutFieldModel[] $fields
-     * @return array
-     */
-    private function getFieldLayoutFieldsDefinition(array $fields)
-    {
-        $fieldDefinitions = array();
-
-        foreach ($fields as $field) {
-            $fieldDefinitions[$field->getField()->handle] = $field->required;
-        }
-
-        return $fieldDefinitions;
     }
 
     //==============================================================================================================
