@@ -275,63 +275,7 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
             'titleFormat' => $entryTypeDefinition['titleFormat']
         ));
 
-        $fieldLayout = $this->getFieldLayout($entryTypeDefinition['fieldLayout']);
+        $fieldLayout = craft()->artVandelay_fields->getFieldLayout($entryTypeDefinition['fieldLayout']);
         $entryType->setFieldLayout($fieldLayout);
-    }
-
-    /**
-     * Attempt to import a field layout.
-     * @param array $fieldLayoutDef
-     * @return FieldLayoutModel
-     */
-    private function getFieldLayout(array $fieldLayoutDef)
-    {
-        $layoutFields = array();
-        $requiredFields = array();
-
-        if (array_key_exists('tabs', $fieldLayoutDef)) {
-            foreach ($fieldLayoutDef['tabs'] as $tabName => $tabDef) {
-                $layoutTabFields = $this->getPrepareFieldLayout($tabDef);
-                $requiredFields = array_merge($requiredFields, $layoutTabFields['required']);
-                $layoutFields[$tabName] = $layoutTabFields['fields'];
-            }
-        } elseif (array_key_exists('fields', $fieldLayoutDef)) {
-            $layoutTabFields = $this->getPrepareFieldLayout($fieldLayoutDef);
-            $requiredFields = $layoutTabFields['required'];
-            $layoutFields = $layoutTabFields['fields'];
-        }
-
-        $fieldLayout = craft()->fields->assembleLayout($layoutFields, $requiredFields);
-        $fieldLayout->type = ElementType::Entry;
-
-        return $fieldLayout;
-    }
-
-    /**
-     * Get a prepared fieldLayout for the craft assembleLayout function
-     * @param array $fieldLayoutDef
-     * @return array
-     */
-    private function getPrepareFieldLayout(array $fieldLayoutDef)
-    {
-        $layoutFields = array();
-        $requiredFields = array();
-
-        foreach ($fieldLayoutDef as $fieldHandle => $required) {
-            $field = craft()->fields->getFieldByHandle($fieldHandle);
-
-            if ($field instanceof FieldModel) {
-                $layoutFields[] = $field->id;
-
-                if ($required) {
-                    $requiredFields[] = $field->id;
-                }
-            }
-        }
-
-        return array(
-            'fields' => $layoutFields,
-            'required' => $requiredFields
-        );
     }
 }
