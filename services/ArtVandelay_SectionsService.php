@@ -147,11 +147,11 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
     /**
      * Attempt to import sections.
-     *
      * @param array $sectionDefinitions
+     * @param bool $force If set to true sections not included in the import will be deleted
      * @return ArtVandelay_ResultModel
      */
-    public function import($sectionDefinitions)
+    public function import($sectionDefinitions, $force = false )
     {
         $result = new ArtVandelay_ResultModel();
 
@@ -200,6 +200,13 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
             // Save section via craft after entrytypes have been created
             if (!craft()->sections->saveSection($section)) {
                 return $result->error($section->getAllErrors());
+            }
+            unset($sections[$sectionHandle]);
+        }
+
+        if($force){
+            foreach($sections as $section){
+                craft()->sections->deleteSectionById($section->id);
             }
         }
 

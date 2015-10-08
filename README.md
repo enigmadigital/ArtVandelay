@@ -40,6 +40,9 @@ Then just run to import...
 php ./craft/app/etc/console/yiic artvandelay import
 ```
 
+Optionally you can use --force to make the import delete any items which are not in the import file.
+WARNING!! This will also delete any related content.
+
 You can also generate a schema.json with
 
 ```

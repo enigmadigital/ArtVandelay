@@ -4,6 +4,13 @@
 /**
  * Encapsulates data that has been exported via Art Vandelay.
  *
+ * @property mixed assets
+ * @property mixed categories
+ * @property mixed fields
+ * @property mixed globals
+ * @property mixed plugins
+ * @property mixed sections
+ * @property mixed tags
  * @author XO Digital
  */
 class ArtVandelay_ExportedDataModel extends BaseModel

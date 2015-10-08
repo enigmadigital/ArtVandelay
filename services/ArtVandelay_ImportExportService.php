@@ -6,12 +6,13 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 {
 	/**
 	 * @param string $json
+	 * @param bool $force if set to true items not included in import will be deleted
 	 * @return ArtVandelay_ResultModel
 	 */
-	public function importFromJson($json)
+	public function importFromJson($json, $force = false)
 	{
 		$exportedDataModel = ArtVandelay_ExportedDataModel::fromJson($json);
-		return $this->importFromExportedDataModel($exportedDataModel);
+		return $this->importFromExportedDataModel($exportedDataModel, $force);
 	}
 
 	public function importTabsFromJson($json, $applyTo)
@@ -35,13 +36,14 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 
 
 	/**
-	 * @param $array
+	 * @param array $array
+	 * @param bool $force if set to true items not included in import will be deleted
 	 * @return ArtVandelay_ResultModel
 	 */
-	public function importFromArray($array)
+	public function importFromArray(array $array, $force = false)
 	{
 		$exportedDataModel = new ArtVandelay_ExportedDataModel($array);
-		return $this->importFromExportedDataModel($exportedDataModel);
+		return $this->importFromExportedDataModel($exportedDataModel, $force);
 	}
 
 	/**
@@ -63,9 +65,10 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 
 	/**
 	 * @param ArtVandelay_ExportedDataModel $model
+	 * @param bool $force if set to true items not in the import will be deleted
 	 * @return ArtVandelay_ResultModel
 	 */
-	private function importFromExportedDataModel(ArtVandelay_ExportedDataModel $model)
+	private function importFromExportedDataModel(ArtVandelay_ExportedDataModel $model, $force)
 	{
 		$result = new ArtVandelay_ResultModel();
 
@@ -75,7 +78,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			$categoryImportResult = craft()->artVandelay_categories->import($model->categories);
 			$fieldImportResult = craft()->artVandelay_fields->import($model->fields);
 			$globalImportResult = craft()->artVandelay_globals->import($model->globals);
-			$sectionImportResult = craft()->artVandelay_sections->import($model->sections);
+			$sectionImportResult = craft()->artVandelay_sections->import($model->sections, $force);
 			$tagImportResult = craft()->artVandelay_tags->import($model->tags);
 
 			$result->consume($pluginImportResult);
