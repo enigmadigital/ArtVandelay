@@ -148,104 +148,52 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
     /**
      * Attempt to import sections.
      *
-     * @param array $sectionDefs
-     *
+     * @param array $sectionDefinitions
      * @return ArtVandelay_ResultModel
      */
-    public function import($sectionDefs)
+    public function import($sectionDefinitions)
     {
         $result = new ArtVandelay_ResultModel();
 
-        if (empty($sectionDefs)) {
+        if (empty($sectionDefinitions)) {
             // Ignore importing sections.
             return $result;
         }
 
-
         $sections = craft()->sections->getAllSections('handle');
 
-        foreach ($sectionDefs as $sectionHandle => $sectionDef) {
+        foreach ($sectionDefinitions as $sectionHandle => $sectionDefinition) {
+
+            if (!array_key_exists('locales', $sectionDefinition)) {
+                return $result->error('`sections[handle].locales` must be defined');
+            }
+
+            if (!array_key_exists('entryTypes', $sectionDefinition)) {
+                return $result->error('`sections[handle].entryTypes` must exist be defined');
+            }
+
             $section = array_key_exists($sectionHandle, $sections)
                 ? $sections[$sectionHandle]
                 : new SectionModel();
 
-            $section->setAttributes(array(
-                'handle' => $sectionHandle,
-                'name' => $sectionDef['name'],
-                'type' => $sectionDef['type'],
-                'hasUrls' => $sectionDef['hasUrls'],
-                'template' => $sectionDef['template'],
-                'maxLevels' => $sectionDef['maxLevels'],
-                'enableVersioning' => $sectionDef['enableVersioning']
-            ));
-
-
-            if (!array_key_exists('locales', $sectionDef)) {
-                return $result->error('`sections[handle].locales` must be defined');
-            }
-
-            $locales = $section->getLocales();
-
-            foreach ($sectionDef['locales'] as $localeId => $localeDef) {
-                $locale = array_key_exists($localeId, $locales)
-                    ? $locales[$localeId]
-                    : new SectionLocaleModel();
-
-                $locale->setAttributes(array(
-                    'locale' => $localeId,
-                    'enabledByDefault' => $localeDef['enabledByDefault'],
-                    'urlFormat' => $localeDef['urlFormat'],
-                    'nestedUrlFormat' => $localeDef['nestedUrlFormat']
-                ));
-
-                // Todo: Is this a hack? I don't see another way.
-                // Todo: Might need a sorting order as well? It's NULL at the moment.
-                craft()->db->createCommand()->insertOrUpdate('locales', array(
-                    'locale' => $locale->locale
-                ), array());
-
-                $locales[$localeId] = $locale;
-            }
-
-            $section->setLocales($locales);
+            $this->populateSection($section, $sectionDefinition, $sectionHandle);
 
             // Create initial section record
-            if (!$this->saveSection($section)) {
+            if (!$this->preSaveSection($section)) {
                 return $result->error($section->getAllErrors());
             }
 
-
             $entryTypes = $section->getEntryTypes('handle');
 
-            if (!array_key_exists('entryTypes', $sectionDef)) {
-                return $result->error('`sections[handle].entryTypes` must exist be defined');
-            }
-
-            foreach ($sectionDef['entryTypes'] as $entryTypeHandle => $entryTypeDef) {
+            foreach ($sectionDefinition['entryTypes'] as $entryTypeHandle => $entryTypeDefinition) {
                 $entryType = array_key_exists($entryTypeHandle, $entryTypes)
                     ? $entryTypes[$entryTypeHandle]
                     : new EntryTypeModel();
 
-                $entryType->setAttributes(array(
-                    'sectionId' => $section->id,
-                    'handle' => $entryTypeHandle,
-                    'name' => $entryTypeDef['name'],
-                    'hasTitleField' => $entryTypeDef['hasTitleField'],
-                    'titleLabel' => $entryTypeDef['titleLabel'],
-                    'titleFormat' => $entryTypeDef['titleFormat']
-                ));
+                $this->populateEntryType($entryType, $entryTypeDefinition, $entryTypeHandle, $section->id);
 
-                $fieldLayout = $this->_importFieldLayout($entryTypeDef['fieldLayout']);
-
-                if ($fieldLayout !== null) {
-                    $entryType->setFieldLayout($fieldLayout);
-
-                    if (!craft()->sections->saveEntryType($entryType)) {
-                        return $result->error($entryType->getAllErrors());
-                    }
-                } else {
-                    // Todo: Too ambiguous.
-                    return $result->error('Failed to import field layout.');
+                if (!craft()->sections->saveEntryType($entryType)) {
+                    return $result->error($entryType->getAllErrors());
                 }
             }
 
@@ -260,10 +208,13 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
 
     /**
      * Save the section manually if it is new to prevent craft from creating the default entry type
+     * In case of a single we do want the default entry type and do a normal save
+     * Todo: This method is a bit hackish, find a better way
+     *
      * @param SectionModel $section
      * @return mixed
      */
-    private function saveSection(SectionModel $section)
+    private function preSaveSection(SectionModel $section)
     {
         if ($section->type != 'single' && !$section->id) {
             $sectionRecord = new SectionRecord();
@@ -284,19 +235,88 @@ class ArtVandelay_SectionsService extends BaseApplicationComponent
         return craft()->sections->saveSection($section);
     }
 
+    /**
+     * @param SectionModel $section
+     * @param array $sectionDefinition
+     * @param string $sectionHandle
+     */
+    private function populateSection(SectionModel $section, array $sectionDefinition, $sectionHandle)
+    {
+        $section->setAttributes(array(
+            'handle' => $sectionHandle,
+            'name' => $sectionDefinition['name'],
+            'type' => $sectionDefinition['type'],
+            'hasUrls' => $sectionDefinition['hasUrls'],
+            'template' => $sectionDefinition['template'],
+            'maxLevels' => $sectionDefinition['maxLevels'],
+            'enableVersioning' => $sectionDefinition['enableVersioning']
+        ));
+
+        $this->populateSectionLocales($section, $sectionDefinition['locales']);
+    }
+
+    /**
+     * @param SectionModel $section
+     * @param $localeDefinitions
+     */
+    private function populateSectionLocales(SectionModel $section, $localeDefinitions)
+    {
+        $locales = $section->getLocales();
+
+        foreach ($localeDefinitions as $localeId => $localeDef) {
+            $locale = array_key_exists($localeId, $locales) ? $locales[$localeId] : new SectionLocaleModel();
+
+            $locale->setAttributes(array(
+                'locale' => $localeId,
+                'enabledByDefault' => $localeDef['enabledByDefault'],
+                'urlFormat' => $localeDef['urlFormat'],
+                'nestedUrlFormat' => $localeDef['nestedUrlFormat']
+            ));
+
+            // Todo: Is this a hack? I don't see another way.
+            // Todo: Might need a sorting order as well? It's NULL at the moment.
+            craft()->db->createCommand()->insertOrUpdate('locales', array(
+                'locale' => $locale->locale
+            ), array());
+
+            $locales[$localeId] = $locale;
+        }
+
+        $section->setLocales($locales);
+    }
+
+    /**
+     * @param EntryTypeModel $entryType
+     * @param array $entryTypeDefinition
+     * @param string $entryTypeHandle
+     * @param int $sectionId
+     */
+    private function populateEntryType(EntryTypeModel $entryType, array $entryTypeDefinition, $entryTypeHandle, $sectionId)
+    {
+        $entryType->setAttributes(array(
+            'handle' => $entryTypeHandle,
+            'sectionId' => $sectionId,
+            'name' => $entryTypeDefinition['name'],
+            'hasTitleField' => $entryTypeDefinition['hasTitleField'],
+            'titleLabel' => $entryTypeDefinition['titleLabel'],
+            'titleFormat' => $entryTypeDefinition['titleFormat']
+        ));
+
+        $fieldLayout = $this->getFieldLayout($entryTypeDefinition['fieldLayout']);
+        $entryType->setFieldLayout($fieldLayout);
+    }
 
     /**
      * Attempt to import a field layout.
      * @param array $fieldLayoutDef
      * @return FieldLayoutModel
      */
-    private function _importFieldLayout(Array $fieldLayoutDef)
+    private function getFieldLayout(array $fieldLayoutDef)
     {
         $layoutFields = array();
         $requiredFields = array();
 
         if (array_key_exists('tabs', $fieldLayoutDef)) {
-
             foreach ($fieldLayoutDef['tabs'] as $tabName => $tabDef) {
                 $layoutTabFields = $this->getPrepareFieldLayout($tabDef);
                 $requiredFields = array_merge($requiredFields, $layoutTabFields['required']);
