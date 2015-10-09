@@ -76,7 +76,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			$pluginImportResult = craft()->artVandelay_plugins->import($model->plugins);
 			$assetImportResult = craft()->artVandelay_assets->import($model->assets);
 			$categoryImportResult = craft()->artVandelay_categories->import($model->categories);
-			$fieldImportResult = craft()->artVandelay_fields->import($model->fields);
+			$fieldImportResult = craft()->artVandelay_fields->import($model->fields, $force);
 			$globalImportResult = craft()->artVandelay_globals->import($model->globals);
 			$sectionImportResult = craft()->artVandelay_sections->import($model->sections, $force);
 			$tagImportResult = craft()->artVandelay_tags->import($model->tags);

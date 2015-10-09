@@ -187,15 +187,15 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
     /**
      * Attempt to import fields.
      *
-     * @param array $groupDefs
-     *
+     * @param array $groupDefinitions
+     * @param bool $force if set to true items not in the import will be deleted
      * @return ArtVandelay_ResultModel
      */
-    public function import($groupDefs)
+    public function import($groupDefinitions, $force = false)
     {
         $result = new ArtVandelay_ResultModel();
 
-        if (empty($groupDefs)) {
+        if (empty($groupDefinitions)) {
             // Ignore importing fields.
             return $result;
         }
@@ -203,7 +203,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
         $groups = craft()->fields->getAllGroups('name');
         $fields = craft()->fields->getAllFields('handle');
 
-        foreach ($groupDefs as $groupName => $fieldDefs) {
+        foreach ($groupDefinitions as $groupName => $fieldDefinitions) {
             $group = array_key_exists($groupName, $groups)
                 ? $groups[$groupName]
                 : new FieldGroupModel();
@@ -214,7 +214,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
                 return $result->error($group->getAllErrors());
             }
 
-            foreach ($fieldDefs as $fieldHandle => $fieldDef) {
+            foreach ($fieldDefinitions as $fieldHandle => $fieldDef) {
                 $field = array_key_exists($fieldHandle, $fields)
                     ? $fields[$fieldHandle]
                     : new FieldModel();
@@ -231,6 +231,17 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
                 if (!craft()->fields->saveField($field)) {
                     return $result->error($field->getAllErrors());
                 }
+                unset($fields[$fieldHandle]);
+            }
+            unset($groups[$groupName]);
+        }
+
+        if($force) {
+            foreach($fields as $field) {
+                craft()->fields->deleteFieldById($field->id);
+            }
+            foreach($groups as $group) {
+                craft()->fields->deleteGroupById($group->id);
             }
         }
 
