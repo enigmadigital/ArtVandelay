@@ -296,6 +296,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
         $field->handle = $fieldHandle;
         $field->required = $fieldDefinition['required'];
         $field->translatable = $fieldDefinition['translatable'];
+        $field->instructions = $fieldDefinition['instructions'];
         $field->type = $fieldDefinition['type'];
         $field->settings = $fieldDefinition['settings'];
 
