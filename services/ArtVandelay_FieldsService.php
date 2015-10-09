@@ -203,6 +203,9 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
         $groups = craft()->fields->getAllGroups('name');
         $fields = craft()->fields->getAllFields('handle');
 
+        craft()->content->fieldContext = 'global';
+        craft()->content->contentTable = 'content';
+
         foreach ($groupDefinitions as $groupName => $fieldDefinitions) {
             $group = array_key_exists($groupName, $groups)
                 ? $groups[$groupName]
