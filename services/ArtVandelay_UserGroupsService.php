@@ -9,7 +9,17 @@ namespace Craft;
 class ArtVandelay_UserGroupsService extends BaseApplicationComponent
 {
     /** @var SectionModel[] */
-    private $sections = [];
+    private $sectionsByHandle = array();
+    private $sectionsById = array();
+
+    /**
+     * Set the sections fields
+     */
+    public function __construct()
+    {
+        $this->sectionsByHandle = craft()->sections->getAllSections('handle');
+        $this->sectionsById = craft()->sections->getAllSections('id');
+    }
 
     //==============================================================================================================
     //=================================================  EXPORT  ===================================================
@@ -21,8 +31,6 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
      */
     public function export(array $groups)
     {
-        $this->sections = craft()->sections->getAllSections('id');
-
         $groupDefinitions = array();
 
         foreach ($groups as $group) {
@@ -39,10 +47,9 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
     private function getGroupDefinition(UserGroupModel $group)
     {
         $permissionDefinitions = array();
-        $groupPermissions = craft()->userPermissions->getPermissionsByGroupId($group->id);
 
-        foreach ($groupPermissions as $permission) {
-            $permissionDefinitions[] = $this->getPermission($permission);;
+        foreach (craft()->userPermissions->getAllPermissions() as $label => $permissions) {
+            $permissionDefinitions = array_merge($permissionDefinitions, $this->getGroupPermissions($group, $permissions));
         }
 
         return array(
@@ -52,14 +59,33 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
     }
 
     /**
+     * @param $group
+     * @param $permissions
+     * @return array|string
+     */
+    private function getGroupPermissions($group, $permissions)
+    {
+        $permissionDefinitions = array();
+        foreach ($permissions as $permission => $options) {
+            if (craft()->userPermissions->doesGroupHavePermission($group->id, $permission)) {
+                $permissionDefinitions[] = $this->getPermissionDefinition($permission);
+                if (array_key_exists('nested', $options)) {
+                    $permissionDefinitions = array_merge($permissionDefinitions, $this->getGroupPermissions($group, $options['nested']));
+                }
+            }
+        }
+        return $permissionDefinitions;
+    }
+
+    /**
      * @param string $permission
      * @return string
      */
-    private function getPermission($permission)
+    private function getPermissionDefinition($permission)
     {
         if (strpos($permission, ':') > -1) {
             $permissionArray = explode(':', $permission);
-            $section = $this->sections[$permissionArray[1]];
+            $section = $this->sectionsById[$permissionArray[1]];
             $permission = $permissionArray[0] . ':' . $section->handle;
 
         }
@@ -77,8 +103,6 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
      */
     public function import(array $groupDefinitions, $force = false)
     {
-        $this->sections = craft()->sections->getAllSections('handle');
-
         $result = new ArtVandelay_ResultModel();
         $userGroups = craft()->userGroups->getAllGroups('handle');
 
@@ -119,6 +143,21 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
             $permissions[] = $this->getPermission($permissionDefinition);
         }
         return $permissions;
+    }
+
+    /**
+     * @param string $permissionDefinition
+     * @return string
+     */
+    private function getPermission($permissionDefinition)
+    {
+        if (strpos($permissionDefinition, ':') > -1) {
+            $permissionArray = explode(':', $permissionDefinition);
+            $section = $this->sectionsByHandle[$permissionArray[1]];
+            $permissionDefinition = $permissionArray[0] . ':' . $section->id;
+
+        }
+        return $permissionDefinition;
     }
 
 }
