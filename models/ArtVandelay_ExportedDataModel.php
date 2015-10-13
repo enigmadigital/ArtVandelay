@@ -11,6 +11,7 @@
  * @property mixed plugins
  * @property mixed sections
  * @property mixed tags
+ * @property mixed userGroups
  * @author XO Digital
  */
 class ArtVandelay_ExportedDataModel extends BaseModel
@@ -43,7 +44,8 @@ class ArtVandelay_ExportedDataModel extends BaseModel
 			'plugins'			=> AttributeType::Mixed,
 			'sections'   		=> AttributeType::Mixed,
 			'contenttabs'   	=> AttributeType::Mixed,
-			'tags'       		=> AttributeType::Mixed
+			'tags'       		=> AttributeType::Mixed,
+			'userGroups'   		=> AttributeType::Mixed,
 		);
 	}
 

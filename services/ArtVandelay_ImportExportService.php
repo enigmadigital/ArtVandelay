@@ -80,6 +80,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			$globalImportResult = craft()->artVandelay_globals->import($model->globals);
 			$sectionImportResult = craft()->artVandelay_sections->import($model->sections, $force);
 			$tagImportResult = craft()->artVandelay_tags->import($model->tags);
+			$userGroupImportResult = craft()->artVandelay_userGroups->import($model->userGroups, $force);
 
 			$result->consume($pluginImportResult);
 			$result->consume($assetImportResult);
@@ -88,6 +89,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			$result->consume($globalImportResult);
 			$result->consume($sectionImportResult);
 			$result->consume($tagImportResult);
+			$result->consume($userGroupImportResult);
 		}
 
 		return $result;
