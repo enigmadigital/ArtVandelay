@@ -100,12 +100,14 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 	{
 		$fieldGroups = craft()->fields->getAllGroups();
 		$sections = craft()->sections->getAllSections();
+		$userGroups = craft()->userGroups->getAllGroups();
 
 		return array(
 			'assets' => craft()->artVandelay_assets->export(),
 			'fields' => craft()->artVandelay_fields->export($fieldGroups),
 			'plugins' => craft()->artVandelay_plugins->export(),
 			'sections' => craft()->artVandelay_sections->export($sections),
+			'userGroups' => craft()->artVandelay_userGroups->export($userGroups),
 		);
 	}
 }
