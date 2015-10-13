@@ -10,7 +10,12 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
 {
     /** @var SectionModel[] */
     private $sectionsByHandle = array();
+    /** @var SectionModel[] */
     private $sectionsById = array();
+    /** @var AssetSourceModel[] */
+    private $assetSourceByHandle = array();
+    /** @var AssetSourceModel[] */
+    private $assetSourceById = array();
 
     /**
      * Set the sections fields
@@ -19,6 +24,8 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
     {
         $this->sectionsByHandle = craft()->sections->getAllSections('handle');
         $this->sectionsById = craft()->sections->getAllSections('id');
+        $this->assetSourceByHandle = $assetSources = craft()->assetSources->getAllSources('handle');
+        $this->assetSourceById = $assetSources = craft()->assetSources->getAllSources('id');
     }
 
     //==============================================================================================================
@@ -85,9 +92,15 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
     {
         if (strpos($permission, ':') > -1) {
             $permissionArray = explode(':', $permission);
-            $section = $this->sectionsById[$permissionArray[1]];
-            $permission = $permissionArray[0] . ':' . $section->handle;
 
+            if (strpos($permission, 'Asset') > -1) {
+                $source = $this->assetSourceById[$permissionArray[1]];
+            } else {
+                $source = $this->sectionsById[$permissionArray[1]];
+            }
+            if ($source) {
+                $permission = $permissionArray[0] . ':' . $source->handle;
+            }
         }
         return $permission;
     }
@@ -153,9 +166,15 @@ class ArtVandelay_UserGroupsService extends BaseApplicationComponent
     {
         if (strpos($permissionDefinition, ':') > -1) {
             $permissionArray = explode(':', $permissionDefinition);
-            $section = $this->sectionsByHandle[$permissionArray[1]];
-            $permissionDefinition = $permissionArray[0] . ':' . $section->id;
 
+            if (strpos($permissionDefinition, 'Asset') > -1) {
+                $source = $this->assetSourceByHandle[$permissionArray[1]];
+            } else {
+                $source = $this->sectionsByHandle[$permissionArray[1]];
+            }
+            if ($source) {
+                $permissionDefinition = $permissionArray[0] . ':' . $source->id;
+            }
         }
         return $permissionDefinition;
     }
