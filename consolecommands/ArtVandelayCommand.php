@@ -34,6 +34,6 @@ class ArtVandelayCommand extends BaseCommand
 	{
 		$schema = craft()->artVandelay_importExport->export();
 
-		file_put_contents($file, json_encode($schema, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK));
+		file_put_contents($file, json_encode($schema, JSON_PRETTY_PRINT));
 	}
 }
