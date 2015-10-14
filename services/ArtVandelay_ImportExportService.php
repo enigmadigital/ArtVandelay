@@ -77,7 +77,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			$assetImportResult = craft()->artVandelay_assets->import($model->assets);
 			$categoryImportResult = craft()->artVandelay_categories->import($model->categories);
 			$fieldImportResult = craft()->artVandelay_fields->import($model->fields, $force);
-			$globalImportResult = craft()->artVandelay_globals->import($model->globals);
+			$globalImportResult = craft()->artVandelay_globals->import($model->globals, $force);
 			$sectionImportResult = craft()->artVandelay_sections->import($model->sections, $force);
 			$tagImportResult = craft()->artVandelay_tags->import($model->tags);
 			$userGroupImportResult = craft()->artVandelay_userGroups->import($model->userGroups, $force);
@@ -102,6 +102,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 	{
 		$fieldGroups = craft()->fields->getAllGroups();
 		$sections = craft()->sections->getAllSections();
+		$globals = craft()->globals->getAllSets();
 		$userGroups = craft()->userGroups->getAllGroups();
 
 		return array(
@@ -109,6 +110,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			'fields' => craft()->artVandelay_fields->export($fieldGroups),
 			'plugins' => craft()->artVandelay_plugins->export(),
 			'sections' => craft()->artVandelay_sections->export($sections),
+			'globals' => craft()->artVandelay_globals->export($globals),
 			'userGroups' => craft()->artVandelay_userGroups->export($userGroups),
 		);
 	}
