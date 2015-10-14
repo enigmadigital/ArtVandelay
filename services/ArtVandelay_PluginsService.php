@@ -56,6 +56,7 @@ class ArtVandelay_PluginsService extends BaseApplicationComponent
             $pluginDefinitions[$handle] = $this->getPluginDefinition($plugin);
         }
 
+        ksort($pluginDefinitions);
         return $pluginDefinitions;
     }
 
