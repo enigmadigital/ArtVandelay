@@ -90,6 +90,12 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			$result->consume($sectionImportResult);
 			$result->consume($tagImportResult);
 			$result->consume($userGroupImportResult);
+
+			// run plugin imports through hook
+			$services = craft()->plugins->callFirst('registerMigrationService');
+			foreach($services as $handle => $service) {
+				$service->import($model->pluginData[$handle], $force);
+			}
 		}
 
 		return $result;
@@ -105,7 +111,7 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 		$globals = craft()->globals->getAllSets();
 		$userGroups = craft()->userGroups->getAllGroups();
 
-		return array(
+		$export = array(
 			'assets' => craft()->artVandelay_assets->export(),
 			'fields' => craft()->artVandelay_fields->export($fieldGroups),
 			'plugins' => craft()->artVandelay_plugins->export(),
@@ -113,5 +119,16 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 			'globals' => craft()->artVandelay_globals->export($globals),
 			'userGroups' => craft()->artVandelay_userGroups->export($userGroups),
 		);
+
+		// run plugin exports through hook
+		$services = craft()->plugins->callFirst('registerMigrationService');
+		$export['pluginData'] = array();
+
+		foreach($services as $handle => $service) {
+			$export['pluginData'][$handle] = $service->export();
+		}
+
+		return $export;
+
 	}
 }
