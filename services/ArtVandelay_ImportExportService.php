@@ -93,8 +93,10 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 
 			// run plugin imports through hook
 			$services = craft()->plugins->callFirst('registerMigrationService');
-			foreach($services as $handle => $service) {
-				$service->import($model->pluginData[$handle], $force);
+			if(is_array($services)) {
+    			foreach($services as $handle => $service) {
+    				$service->import($model->pluginData[$handle], $force);
+    			}
 			}
 		}
 
@@ -122,11 +124,12 @@ class ArtVandelay_ImportExportService extends BaseApplicationComponent
 
 		// run plugin exports through hook
 		$services = craft()->plugins->callFirst('registerMigrationService');
-		$export['pluginData'] = array();
-
-		foreach($services as $handle => $service) {
-			$export['pluginData'][$handle] = $service->export();
-		}
+		if(is_array($services)) {
+    		$export['pluginData'] = array();
+    		foreach($services as $handle => $service) {
+    			$export['pluginData'][$handle] = $service->export();
+    		}
+    	}
 
 		return $export;
 
