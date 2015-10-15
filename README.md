@@ -33,6 +33,15 @@ The import now has a couple of steps:
 ## Hooks
 * Has a hook "registerMigrationService" to add exports with your own data.
 
+```php
+public function registerMigrationService()
+{
+    return array(
+		'amnav' => craft()->artVandelay_amNav
+	);
+}
+```
+
 ## Command Line
 
 Make sure you have your latest export stored at `./craft/config/schema.json`.
