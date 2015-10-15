@@ -46,6 +46,7 @@ class ArtVandelay_ExportedDataModel extends BaseModel
 			'contenttabs'   	=> AttributeType::Mixed,
 			'tags'       		=> AttributeType::Mixed,
 			'userGroups'   		=> AttributeType::Mixed,
+			'pluginData'   		=> AttributeType::Mixed,
 		);
 	}
 
