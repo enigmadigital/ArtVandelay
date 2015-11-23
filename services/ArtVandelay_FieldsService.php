@@ -64,7 +64,8 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 								'name'         => $blockTypeField->name,
 								'required'     => $blockTypeField->required,
 								'translatable' => $blockTypeField->translatable,
-								'type'         => $blockTypeField->type
+								'type'         => $blockTypeField->type,
+								'instructions' => $blockTypeField->instructions
 							);
 						}
 
@@ -134,7 +135,8 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 									'name' => $blockTypeField->name,
 									'required' => $blockTypeField->required,
 									'translatable' => $blockTypeField->translatable,
-									'type' => $blockTypeField->type
+									'type' => $blockTypeField->type,
+									'instructions' => $blockTypeField->instructions
 								);
 							}
 
@@ -301,7 +303,7 @@ class ArtVandelay_FieldsService extends BaseApplicationComponent
 							$blockTypeField->required     = $blockTypeFieldDef['required'];
 							$blockTypeField->translatable = $blockTypeFieldDef['translatable'];
 							$blockTypeField->type         = $blockTypeFieldDef['type'];
-
+							$blockTypeField->instructions = $blockTypeFieldDef['instructions'];
 							$newBlockTypeFields[] = $blockTypeField;
 						}
 
