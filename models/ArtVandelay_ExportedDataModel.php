@@ -4,6 +4,14 @@
 /**
  * Encapsulates data that has been exported via Art Vandelay.
  *
+ * @property mixed assets
+ * @property mixed categories
+ * @property mixed fields
+ * @property mixed globals
+ * @property mixed plugins
+ * @property mixed sections
+ * @property mixed tags
+ * @property mixed userGroups
  * @author XO Digital
  */
 class ArtVandelay_ExportedDataModel extends BaseModel
@@ -23,6 +31,9 @@ class ArtVandelay_ExportedDataModel extends BaseModel
 	}
 
 
+	/**
+	 * @inheritdoc
+	 */
 	protected function defineAttributes()
 	{
 		return array(
@@ -30,9 +41,12 @@ class ArtVandelay_ExportedDataModel extends BaseModel
 			'categories' 		=> AttributeType::Mixed,
 			'fields'     		=> AttributeType::Mixed,
 			'globals'    		=> AttributeType::Mixed,
+			'plugins'			=> AttributeType::Mixed,
 			'sections'   		=> AttributeType::Mixed,
-			'contenttabs'   => AttributeType::Mixed,
-			'tags'       		=> AttributeType::Mixed
+			'contenttabs'   	=> AttributeType::Mixed,
+			'tags'       		=> AttributeType::Mixed,
+			'userGroups'   		=> AttributeType::Mixed,
+			'pluginData'   		=> AttributeType::Mixed,
 		);
 	}
 

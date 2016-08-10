@@ -34,7 +34,9 @@ import: { label: "Import"|t, url: url('artVandelay/import/1') },
           <input type="hidden" name="action" value="artVandelay/importstep3">
         {% endif %}
 
-        {% if model.fields | length %}
+          {{ getCsrfInput() }}
+
+          {% if model.fields | length %}
           <h2>Fields to be imported</h2>
           <table class="data fullwidth">
             <thead>

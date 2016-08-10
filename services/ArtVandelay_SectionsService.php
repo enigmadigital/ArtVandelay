@@ -1,294 +1,281 @@
 <?php
 namespace Craft;
 
+/**
+ * Class ArtVandelay_SectionsService
+ */
 class ArtVandelay_SectionsService extends BaseApplicationComponent
 {
 
-	public function export(array $sections, $allowedEntryTypeIds)
-	{
-		$sectionDefs = array();
+    //==============================================================================================================
+    //=================================================  EXPORT  ===================================================
+    //==============================================================================================================
 
-		foreach ($sections as $section)
-		{
-			$localeDefs = array();
+    /**
+     * @param SectionModel[] $sections
+     * @param array|null $allowedEntryTypeIds
+     * @return array
+     */
+    public function export(array $sections, array $allowedEntryTypeIds = null)
+    {
+        $sectionDefinitions = array();
 
-			foreach ($section->getLocales() as $locale)
-			{
-				$localeDefs[$locale->locale] = array(
-					'enabledByDefault' => $locale->enabledByDefault,
-					'urlFormat'        => $locale->urlFormat,
-					'nestedUrlFormat'  => $locale->nestedUrlFormat
-				);
-			}
+        foreach ($sections as $section) {
+            $sectionDefinitions[$section->handle] = $this->getSectionDefinition($section, $allowedEntryTypeIds);
+        }
 
-			$entryTypeDefs = array();
+        return $sectionDefinitions;
+    }
 
-			foreach ($section->getEntryTypes() as $entryType)
-			{
-				if ($allowedEntryTypeIds === null || in_array($entryType->id, $allowedEntryTypeIds))
-				{
-					$entryTypeDefs[$entryType->handle] = array(
-						'name'          => $entryType->name,
-						'hasTitleField' => $entryType->hasTitleField,
-						'titleLabel'    => $entryType->titleLabel,
-						'titleFormat'   => $entryType->titleFormat,
-						'fieldLayout'   => $this->_exportFieldLayout($entryType->getFieldLayout())
-					);
-				}
-			}
+    /**
+     * @param SectionModel $section
+     * @param $allowedEntryTypeIds
+     * @return array
+     */
+    private function getSectionDefinition(SectionModel $section, $allowedEntryTypeIds)
+    {
+        return array(
+            'name' => $section->name,
+            'type' => $section->type,
+            'hasUrls' => $section->hasUrls,
+            'template' => $section->template,
+            'maxLevels' => $section->maxLevels,
+            'enableVersioning' => $section->enableVersioning,
+            'locales' => $this->getLocaleDefinitions($section->getLocales()),
+            'entryTypes' => $this->getEntryTypeDefinitions($section->getEntryTypes(), $allowedEntryTypeIds)
+        );
+    }
 
-			$sectionDefs[$section->handle] = array(
-				'name'             => $section->name,
-				'type'             => $section->type,
-				'hasUrls'          => $section->hasUrls,
-				'template'         => $section->template,
-				'maxLevels'        => $section->maxLevels,
-				'enableVersioning' => $section->enableVersioning,
-				'locales'          => $localeDefs,
-				'entryTypes'       => $entryTypeDefs
-			);
-		}
+    /**
+     * @param SectionLocaleModel[] $locales
+     * @return array
+     */
+    private function getLocaleDefinitions(array $locales)
+    {
+        $localeDefinitions = array();
 
-		return $sectionDefs;
-	}
+        foreach ($locales as $locale) {
+            $localeDefinitions[$locale->locale] = $this->getLocaleDefinition($locale);
+        }
 
-	private function _exportFieldLayout(FieldLayoutModel $fieldLayout)
-	{
-		if ($fieldLayout->getTabs())
-		{
-			$tabDefs = array();
+        return $localeDefinitions;
+    }
 
-			foreach ($fieldLayout->getTabs() as $tab)
-			{
-				$tabDefs[$tab->name] = array();
+    /**
+     * @param SectionLocaleModel $locale
+     * @return array
+     */
+    private function getLocaleDefinition(SectionLocaleModel $locale)
+    {
+        return array(
+            'enabledByDefault' => $locale->enabledByDefault,
+            'urlFormat' => $locale->urlFormat,
+            'nestedUrlFormat' => $locale->nestedUrlFormat
+        );
+    }
 
-				foreach ($tab->getFields() as $field)
-				{
-					$tabDefs[$tab->name][$field->getField()->handle] = $field->required;
-				}
-			}
+    /**
+     * @param array $entryTypes
+     * @param $allowedEntryTypeIds
+     * @return array
+     */
+    private function getEntryTypeDefinitions(array $entryTypes, $allowedEntryTypeIds)
+    {
+        $entryTypeDefinitions = array();
 
-			return array(
-				'tabs' => $tabDefs
-			);
-		}
-		else
-		{
-			$fieldDefs = array();
+        foreach ($entryTypes as $entryType) {
+            if ($allowedEntryTypeIds === null || in_array($entryType->id, $allowedEntryTypeIds)) {
+                $entryTypeDefinitions[$entryType->handle] = $this->getEntryTypeDefinition($entryType);
+            }
+        }
 
-			foreach ($fieldLayout->getFields() as $field)
-			{
-				$fieldDefs[$field->getField()->handle] = $field->required;
-			}
+        return $entryTypeDefinitions;
+    }
 
-			return array(
-				'fields' => $fieldDefs
-			);
-		}
-	}
+    /**
+     * @param EntryTypeModel $entryType
+     * @return array
+     */
+    private function getEntryTypeDefinition(EntryTypeModel $entryType)
+    {
+        return array(
+            'name' => $entryType->name,
+            'hasTitleField' => $entryType->hasTitleField,
+            'titleLabel' => $entryType->titleLabel,
+            'titleFormat' => $entryType->titleFormat,
+            'fieldLayout' => craft()->artVandelay_fields->getFieldLayoutDefinition($entryType->getFieldLayout())
+        );
+    }
 
+    //==============================================================================================================
+    //=================================================  IMPORT  ===================================================
+    //==============================================================================================================
 
-	/**
-	 * Attempt to import sections.
-	 *
-	 * @param array $sectionDefs
-	 *
-	 * @return ArtVandelay_ResultModel
-	 */
-	public function import($sectionDefs)
-	{
-		$result = new ArtVandelay_ResultModel();
+    /**
+     * Attempt to import sections.
+     * @param array $sectionDefinitions
+     * @param bool $force If set to true sections not included in the import will be deleted
+     * @return ArtVandelay_ResultModel
+     */
+    public function import($sectionDefinitions, $force = false )
+    {
+        $result = new ArtVandelay_ResultModel();
 
-		if(empty($sectionDefs))
-		{
-			// Ignore importing sections.
-			return $result;
-		}
+        if (empty($sectionDefinitions)) {
+            // Ignore importing sections.
+            return $result;
+        }
 
+        $sections = craft()->sections->getAllSections('handle');
 
-		$sections = craft()->sections->getAllSections('handle');
+        foreach ($sectionDefinitions as $sectionHandle => $sectionDefinition) {
 
-		foreach ($sectionDefs as $sectionHandle => $sectionDef)
-		{
-			$section = array_key_exists($sectionHandle, $sections)
-				? $sections[$sectionHandle]
-				: new SectionModel();
+            if (!array_key_exists('locales', $sectionDefinition)) {
+                return $result->error('`sections[handle].locales` must be defined');
+            }
 
-			$section->setAttributes(array(
-				'handle'           => $sectionHandle,
-				'name'             => $sectionDef['name'],
-				'type'             => $sectionDef['type'],
-				'hasUrls'          => $sectionDef['hasUrls'],
-				'template'         => $sectionDef['template'],
-				'maxLevels'        => $sectionDef['maxLevels'],
-				'enableVersioning' => $sectionDef['enableVersioning']
-			));
+            if (!array_key_exists('entryTypes', $sectionDefinition)) {
+                return $result->error('`sections[handle].entryTypes` must exist be defined');
+            }
 
+            $section = array_key_exists($sectionHandle, $sections)
+                ? $sections[$sectionHandle]
+                : new SectionModel();
 
-			if (!array_key_exists('locales', $sectionDef))
-			{
-				return $result->error('`sections[handle].locales` must be defined');
-			}
+            $this->populateSection($section, $sectionDefinition, $sectionHandle);
 
-			$locales = $section->getLocales();
+            // Create initial section record
+            if (!$this->preSaveSection($section)) {
+                return $result->error($section->getAllErrors());
+            }
 
-			foreach ($sectionDef['locales'] as $localeId => $localeDef)
-			{
-				$locale = array_key_exists($localeId, $locales)
-					? $locales[$localeId]
-					: new SectionLocaleModel();
+            $entryTypes = $section->getEntryTypes('handle');
 
-				$locale->setAttributes(array(
-					'locale'           => $localeId,
-					'enabledByDefault' => $localeDef['enabledByDefault'],
-					'urlFormat'        => $localeDef['urlFormat'],
-					'nestedUrlFormat'  => $localeDef['nestedUrlFormat']
-				));
+            foreach ($sectionDefinition['entryTypes'] as $entryTypeHandle => $entryTypeDefinition) {
+                $entryType = array_key_exists($entryTypeHandle, $entryTypes)
+                    ? $entryTypes[$entryTypeHandle]
+                    : new EntryTypeModel();
 
-				// Todo: Is this a hack? I don't see another way.
-				// Todo: Might need a sorting order as well? It's NULL at the moment.
-				craft()->db->createCommand()->insertOrUpdate('locales', array(
-					'locale' => $locale->locale
-				), array());
+                $this->populateEntryType($entryType, $entryTypeDefinition, $entryTypeHandle, $section->id);
 
-				$locales[$localeId] = $locale;
-			}
+                if (!craft()->sections->saveEntryType($entryType)) {
+                    return $result->error($entryType->getAllErrors());
+                }
+            }
 
-			$section->setLocales($locales);
+            // Save section via craft after entrytypes have been created
+            if (!craft()->sections->saveSection($section)) {
+                return $result->error($section->getAllErrors());
+            }
+            unset($sections[$sectionHandle]);
+        }
 
-			if (!craft()->sections->saveSection($section))
-			{
-				return $result->error($section->getAllErrors());
-			}
+        if($force){
+            foreach($sections as $section){
+                craft()->sections->deleteSectionById($section->id);
+            }
+        }
 
+        return $result;
+    }
 
-			$entryTypes = $section->getEntryTypes('handle');
+    /**
+     * Save the section manually if it is new to prevent craft from creating the default entry type
+     * In case of a single we do want the default entry type and do a normal save
+     * Todo: This method is a bit hackish, find a better way
+     *
+     * @param SectionModel $section
+     * @return mixed
+     */
+    private function preSaveSection(SectionModel $section)
+    {
+        if ($section->type != 'single' && !$section->id) {
+            $sectionRecord = new SectionRecord();
 
-			if (!array_key_exists('entryTypes', $sectionDef))
-			{
-				return $result->error('`sections[handle].entryTypes` must exist be defined');
-			}
+            // Shared attributes
+            $sectionRecord->name = $section->name;
+            $sectionRecord->handle = $section->handle;
+            $sectionRecord->type = $section->type;
+            $sectionRecord->enableVersioning = $section->enableVersioning;
 
-			foreach ($sectionDef['entryTypes'] as $entryTypeHandle => $entryTypeDef)
-			{
-				$entryType = array_key_exists($entryTypeHandle, $entryTypes)
-					? $entryTypes[$entryTypeHandle]
-					: new EntryTypeModel();
+            if (!$sectionRecord->save()) {
+                $section->addErrors($sectionRecord->getErrors());
+                return false;
+            };
+            $section->id = $sectionRecord->id;
+            return true;
+        }
+        return craft()->sections->saveSection($section);
+    }
 
-				$entryType->setAttributes(array(
-					'sectionId'     => $section->id,
-					'handle'        => $entryTypeHandle,
-					'name'          => $entryTypeDef['name'],
-					'hasTitleField' => $entryTypeDef['hasTitleField'],
-					'titleLabel'    => $entryTypeDef['titleLabel'],
-					'titleFormat'   => $entryTypeDef['titleFormat']
-				));
+    /**
+     * @param SectionModel $section
+     * @param array $sectionDefinition
+     * @param string $sectionHandle
+     */
+    private function populateSection(SectionModel $section, array $sectionDefinition, $sectionHandle)
+    {
+        $section->setAttributes(array(
+            'handle' => $sectionHandle,
+            'name' => $sectionDefinition['name'],
+            'type' => $sectionDefinition['type'],
+            'hasUrls' => $sectionDefinition['hasUrls'],
+            'template' => $sectionDefinition['template'],
+            'maxLevels' => $sectionDefinition['maxLevels'],
+            'enableVersioning' => $sectionDefinition['enableVersioning']
+        ));
 
-				$fieldLayout = $this->_importFieldLayout($entryTypeDef['fieldLayout']);
+        $this->populateSectionLocales($section, $sectionDefinition['locales']);
+    }
 
-				if($fieldLayout !== null)
-				{
-					$entryType->setFieldLayout($fieldLayout);
+    /**
+     * @param SectionModel $section
+     * @param $localeDefinitions
+     */
+    private function populateSectionLocales(SectionModel $section, $localeDefinitions)
+    {
+        $locales = $section->getLocales();
 
-					if (!craft()->sections->saveEntryType($entryType))
-					{
-						return $result->error($entryType->getAllErrors());
-					}
-				}
-				else
-				{
-					// Todo: Too ambiguous.
-					return $result->error('Failed to import field layout.');
-				}
-			}
-		}
+        foreach ($localeDefinitions as $localeId => $localeDef) {
+            $locale = array_key_exists($localeId, $locales) ? $locales[$localeId] : new SectionLocaleModel();
 
-		return $result;
-	}
+            $locale->setAttributes(array(
+                'locale' => $localeId,
+                'enabledByDefault' => $localeDef['enabledByDefault'],
+                'urlFormat' => $localeDef['urlFormat'],
+                'nestedUrlFormat' => $localeDef['nestedUrlFormat']
+            ));
 
+            // Todo: Is this a hack? I don't see another way.
+            // Todo: Might need a sorting order as well? It's NULL at the moment.
+            craft()->db->createCommand()->insertOrUpdate('locales', array(
+                'locale' => $locale->locale
+            ), array());
 
-	/**
-	 * Attempt to import a field layout.
-	 *
-	 * @param array $fieldLayoutDef
-	 *
-	 * @return FieldLayoutModel
-	 */
-	private function _importFieldLayout(Array $fieldLayoutDef)
-	{
-		$layoutTabs   = array();
-		$layoutFields = array();
+            $locales[$localeId] = $locale;
+        }
 
-		if (array_key_exists('tabs', $fieldLayoutDef))
-		{
-			$tabSortOrder = 0;
+        $section->setLocales($locales);
+    }
 
-			foreach ($fieldLayoutDef['tabs'] as $tabName => $tabDef)
-			{
-				$layoutTabFields = array();
+    /**
+     * @param EntryTypeModel $entryType
+     * @param array $entryTypeDefinition
+     * @param string $entryTypeHandle
+     * @param int $sectionId
+     */
+    private function populateEntryType(EntryTypeModel $entryType, array $entryTypeDefinition, $entryTypeHandle, $sectionId)
+    {
+        $entryType->setAttributes(array(
+            'handle' => $entryTypeHandle,
+            'sectionId' => $sectionId,
+            'name' => $entryTypeDefinition['name'],
+            'hasTitleField' => $entryTypeDefinition['hasTitleField'],
+            'titleLabel' => $entryTypeDefinition['titleLabel'],
+            'titleFormat' => $entryTypeDefinition['titleFormat']
+        ));
 
-				foreach ($tabDef as $fieldHandle => $required)
-				{
-					$fieldSortOrder = 0;
-
-					$field = craft()->fields->getFieldByHandle($fieldHandle);
-
-					if ($field)
-					{
-						$layoutField = new FieldLayoutFieldModel();
-
-						$layoutField->setAttributes(array(
-							'fieldId'   => $field->id,
-							'required'  => $required,
-							'sortOrder' => ++$fieldSortOrder
-						));
-
-						$layoutTabFields[] = $layoutField;
-						$layoutFields[] = $layoutField;
-					}
-				}
-
-				$layoutTab = new FieldLayoutTabModel();
-
-				$layoutTab->setAttributes(array(
-					'name' => $tabName,
-					'sortOrder' => ++$tabSortOrder
-				));
-
-				$layoutTab->setFields($layoutTabFields);
-
-				$layoutTabs[] = $layoutTab;
-			}
-		}
-
-		else if (array_key_exists('fields', $fieldLayoutDef))
-		{
-			$fieldSortOrder = 0;
-
-			foreach ($fieldLayoutDef['fields'] as $fieldHandle => $required)
-			{
-				$field = craft()->fields->getFieldByHandle($fieldHandle);
-
-				if ($field)
-				{
-					$layoutField = new FieldLayoutFieldModel();
-
-					$layoutField->setAttributes(array(
-						'fieldId'   => $field->id,
-						'required'  => $required,
-						'sortOrder' => ++$fieldSortOrder
-					));
-
-					$layoutFields[] = $layoutField;
-				}
-			}
-		}
-
-		$fieldLayout = new FieldLayoutModel();
-		$fieldLayout->type = ElementType::Entry;
-		$fieldLayout->setTabs($layoutTabs);
-		$fieldLayout->setFields($layoutFields);
-
-		return $fieldLayout;
-	}
+        $fieldLayout = craft()->artVandelay_fields->getFieldLayout($entryTypeDefinition['fieldLayout']);
+        $entryType->setFieldLayout($fieldLayout);
+    }
 }
