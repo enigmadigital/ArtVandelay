@@ -163,7 +163,7 @@ import: { label: "Import"|t, url: url('artVandelay/import/1') },
         {% endif %}
 
 
-
+        {{ getCsrfInput() }}
         <input type="hidden" name="data" id="importData" value='{{ rawdata|replace({"\n":'', "\r":''}) }}' />
         <input type="hidden" name="applyTo" id="applyTo" value='' />
 
